@@ -1,0 +1,21 @@
+# Maven
+target/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ(使う人がいれば)
+.idea/
+*.iml
+
+# 各自のDB接続設定(パスワードを含むためコミットしない)
+application-local.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ログ
+*.log

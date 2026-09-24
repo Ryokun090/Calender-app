@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: calendar-app
+  profiles:
+    active: local
+  thymeleaf:
+    cache: false   # 開発中はキャッシュ無効。本番前にtrueへ戻す
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true   # DBのsnake_case ↔ Javaのcamel case を自動変換
