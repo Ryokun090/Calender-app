@@ -4,11 +4,22 @@
 -- ============================================================
 
 CREATE TABLE users (
+  id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+  name              VARCHAR(50)  NOT NULL,
+  email             VARCHAR(255) NOT NULL UNIQUE,
+  password_hash     VARCHAR(255) NOT NULL,
+  is_2fa_enabled    BOOLEAN      NOT NULL DEFAULT FALSE,  -- ユーザーごとにON/OFFを選べる仕様
+  created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE password_reset_tokens (
   id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-  name            VARCHAR(50)  NOT NULL,
-  email           VARCHAR(255) NOT NULL UNIQUE,
-  password_hash   VARCHAR(255) NOT NULL,
-  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+  user_id         BIGINT       NOT NULL,
+  token           VARCHAR(64)  NOT NULL UNIQUE,   -- URLに載せるランダム文字列(6桁コードではなく長めのトークン)
+  expires_at      DATETIME     NOT NULL,          -- 発行から30分程度を想定
+  is_used         BOOLEAN      NOT NULL DEFAULT FALSE,
+  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE otp_codes (
