@@ -11,6 +11,17 @@ CREATE TABLE users (
   created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE otp_codes (
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id         BIGINT      NOT NULL,
+  code            VARCHAR(6)  NOT NULL,        -- 6桁の数字コード
+  expires_at      DATETIME    NOT NULL,        -- 発行から5分程度を想定
+  is_used         BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_otp_user (user_id, is_used)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE calendars (
   id              BIGINT AUTO_INCREMENT PRIMARY KEY,
   name            VARCHAR(100) NOT NULL,
