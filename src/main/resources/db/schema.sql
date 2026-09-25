@@ -59,6 +59,7 @@ CREATE TABLE schedules (
   google_event_id   VARCHAR(255) NULL,       -- Google Calendar連携(オプション機能)を使った場合だけ入る
   title             VARCHAR(100) NOT NULL,
   description       TEXT         NULL,
+  location          VARCHAR(200) NULL,
   start_time        DATETIME     NOT NULL,
   end_time          DATETIME     NOT NULL,
   created_by        BIGINT       NOT NULL,
@@ -68,6 +69,46 @@ CREATE TABLE schedules (
   FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE CASCADE,
   CONSTRAINT chk_schedule_time CHECK (end_time > start_time),
   INDEX idx_schedules_calendar_range (calendar_id, start_time, end_time)  -- 日ごと・空き日程の範囲検索用
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- 空き日程調整(調整さん型)
+-- 候補日程を複数出し、メンバーが○×で回答、確定したらschedulesに1件作られる
+-- ============================================================
+
+CREATE TABLE schedule_polls (
+  id                    BIGINT AUTO_INCREMENT PRIMARY KEY,
+  calendar_id           BIGINT       NOT NULL,
+  title                 VARCHAR(100) NOT NULL,
+  location              VARCHAR(200) NULL,
+  description           TEXT         NULL,
+  status                ENUM('open', 'confirmed') NOT NULL DEFAULT 'open',
+  confirmed_schedule_id BIGINT       NULL,     -- 確定後、対応するschedulesの行を指す
+  created_by            BIGINT       NOT NULL,
+  created_at            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (calendar_id) REFERENCES calendars(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by)  REFERENCES users(id)     ON DELETE CASCADE,
+  FOREIGN KEY (confirmed_schedule_id) REFERENCES schedules(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE poll_candidates (
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  poll_id         BIGINT   NOT NULL,
+  start_time      DATETIME NOT NULL,
+  end_time        DATETIME NOT NULL,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (poll_id) REFERENCES schedule_polls(id) ON DELETE CASCADE,
+  CONSTRAINT chk_candidate_time CHECK (end_time > start_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE poll_responses (
+  poll_candidate_id   BIGINT  NOT NULL,
+  user_id             BIGINT  NOT NULL,
+  is_available        BOOLEAN NOT NULL,
+  responded_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (poll_candidate_id, user_id),
+  FOREIGN KEY (poll_candidate_id) REFERENCES poll_candidates(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id)           REFERENCES users(id)           ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE comments (
@@ -84,7 +125,7 @@ CREATE TABLE notifications (
   id              BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id         BIGINT       NOT NULL,
   schedule_id     BIGINT       NULL,          -- 予定が削除されても通知履歴は残す(SET NULL)
-  type            VARCHAR(30)  NOT NULL,       -- 'comment' / 'invite_request' / 'schedule_created' など
+  type            VARCHAR(30)  NOT NULL,       -- 'comment' / 'invite_request' / 'schedule_created' / 'poll_confirmed' / 'reminder' など
   message         VARCHAR(255) NOT NULL,
   is_read         BOOLEAN      NOT NULL DEFAULT FALSE,
   created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
