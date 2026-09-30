@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>新規登録 - SukiMatch</title>
+</head>
+<body>
+<div style="max-width:360px;margin:60px auto;padding:24px;border:1px solid #ddd;border-radius:12px;">
+    <h1 style="text-align:center;font-size:18px;">アカウントを作成</h1>
+
+    <form th:action="@{/auth/signup}" th:object="${signupForm}" method="post">
+        <div>
+            <label>ニックネーム</label><br/>
+            <input type="text" th:field="*{name}" style="width:100%;">
+            <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;font-size:12px;margin:2px 0;"></p>
+        </div>
+        <div style="margin-top:8px;">
+            <label>メールアドレス</label><br/>
+            <input type="email" th:field="*{email}" style="width:100%;">
+            <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color:red;font-size:12px;margin:2px 0;"></p>
+        </div>
+        <div style="margin-top:8px;">
+            <label>パスワード</label><br/>
+            <input type="password" th:field="*{password}" style="width:100%;">
+            <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" style="color:red;font-size:12px;margin:2px 0;"></p>
+        </div>
+        <div style="margin-top:8px;">
+            <label>パスワード確認</label><br/>
+            <input type="password" th:field="*{passwordConfirm}" style="width:100%;">
+            <p th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}" style="color:red;font-size:12px;margin:2px 0;"></p>
+        </div>
+        <button type="submit" style="width:100%;margin-top:16px;">アカウントを作成</button>
+    </form>
+
+    <p style="text-align:center;margin-top:16px;">
+        すでにアカウントをお持ちですか？ <a th:href="@{/auth/login}">ログイン</a>
+    </p>
+</div>
+</body>
+</html>

@@ -27,12 +27,14 @@ public class LoginUser implements UserDetails {
     private final String name;
     private final String email;
     private final String passwordHash;
+    private final boolean twoFaEnabled;
 
-    public LoginUser(Long id, String name, String email, String passwordHash) {
+    public LoginUser(Long id, String name, String email, String passwordHash, boolean twoFaEnabled) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.passwordHash = passwordHash;
+        this.twoFaEnabled = twoFaEnabled;
     }
 
     public Long getId() {
@@ -45,6 +47,10 @@ public class LoginUser implements UserDetails {
 
     public String getEmailAddress() {
         return email;
+    }
+
+    public boolean isTwoFaEnabled() {
+        return twoFaEnabled;
     }
 
     // ---- UserDetails実装(Spring Securityが要求するメソッド群) ----

@@ -2,21 +2,22 @@ package com.hakkushon.calendarapp.common;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.hakkushon.calendarapp.service.UserService;
+
 /**
- * 暫定のSecurity設定。
+ * 本実装のSecurity設定。
  *
- * spring-boot-starter-securityを入れると、デフォルトでは全リクエストが
- * ログイン必須になり、コンソールに毎回ランダムなパスワードが表示される。
- * 環境構築の動作確認(/health)がそれで止まらないよう、いったん全許可にしてある。
+ * formLoginのsuccessHandlerをTwoFactorAuthenticationSuccessHandlerにしているため、
+ * defaultSuccessUrlは使っていない(ログイン成功後の行き先はそちら側で分岐する)。
  *
- * Aが認証機能を実装する際、このクラスを本来のログイン設定
- * (formLogin、認可ルールなど)に置き換えること。
- * PasswordEncoderのBean定義だけはそのまま使ってよい。
+ * /auth/verify** は、2段階認証待ちの「まだ認証されていない」状態でアクセスする画面なので
+ * permitAllに含めている。
  */
 @Configuration
 public class SecurityConfig {
@@ -27,10 +28,31 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public DaoAuthenticationProvider authenticationProvider(UserService userService, PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, TwoFactorAuthenticationSuccessHandler twoFactorSuccessHandler) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-            .csrf(csrf -> csrf.disable()); // TODO: Aが本実装時にCSRF設定を見直す
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/auth/**", "/health", "/css/**", "/js/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/auth/login")
+                .loginProcessingUrl("/auth/login")
+                .successHandler(twoFactorSuccessHandler)
+                .failureUrl("/auth/login?error")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/auth/logout")
+                .logoutSuccessUrl("/auth/login?logout")
+            );
 
         return http.build();
     }
