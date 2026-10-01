@@ -133,8 +133,7 @@ public class AuthController {
         switch (result) {
             case SUCCESS -> {
                 establishAuthentication(userId, request);
-                // TODO: Bの実装後 "/calendars" に変更
-                return "redirect:/health";
+                return "redirect:/calendars";
             }
             case EXPIRED -> model.addAttribute("error", "認証コードの有効期限が切れています。再送信してください");
             case LOCKED -> model.addAttribute("error", "誤入力の回数が上限に達しました。コードを再送信してください");

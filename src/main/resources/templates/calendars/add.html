@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>カレンダーを追加 - 共有カレンダーアプリ</title>
+</head>
+<body>
+<div style="max-width:480px;margin:40px auto;padding:24px;">
+    <h1 style="font-size:18px;">カレンダーを追加</h1>
+    <p style="font-size:13px;color:#777;">新しいカレンダーを作成するか、招待コードから参加できます。</p>
+
+    <div style="border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;">
+        <h2 style="font-size:14px;margin-top:0;">新しいカレンダーを作成</h2>
+        <form th:action="@{/calendars}" th:object="${createCalendarForm}" method="post">
+            <label>カレンダー名</label><br/>
+            <input type="text" th:field="*{name}" placeholder="例:サークル活動" style="width:100%;">
+            <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;font-size:12px;"></p>
+            <button type="submit" style="width:100%;margin-top:8px;">カレンダーを作成</button>
+        </form>
+    </div>
+
+    <div style="border:1px solid #ddd;border-radius:8px;padding:16px;">
+        <h2 style="font-size:14px;margin-top:0;">招待コードで参加</h2>
+        <p th:if="${joinError}" th:text="${joinError}" style="color:red;font-size:12px;"></p>
+        <form th:action="@{/calendars/join}" th:object="${joinCalendarForm}" method="post">
+            <label>招待コード</label><br/>
+            <input type="text" th:field="*{code}" placeholder="12文字以内のコードを入力"
+                   style="width:100%;text-align:center;letter-spacing:2px;text-transform:uppercase;">
+            <p th:if="${#fields.hasErrors('code')}" th:errors="*{code}" style="color:red;font-size:12px;"></p>
+            <button type="submit" style="width:100%;margin-top:8px;">参加する</button>
+        </form>
+    </div>
+
+    <p style="text-align:center;margin-top:16px;">
+        <a th:href="@{/calendars}">カレンダー一覧へ戻る</a>
+    </p>
+</div>
+</body>
+</html>

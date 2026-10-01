@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hakkushon.calendarapp.mapper.CalendarMapper">
+
+    <resultMap id="calendarResultMap" type="com.hakkushon.calendarapp.domain.Calendar">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="isPersonal" column="is_personal"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="calendarSummaryResultMap" type="com.hakkushon.calendarapp.domain.CalendarSummary">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="isPersonal" column="is_personal"/>
+        <result property="role" column="role"/>
+        <result property="memberCount" column="member_count"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO calendars (name, owner_id, is_personal)
+        VALUES (#{name}, #{ownerId}, #{isPersonal})
+    </insert>
+
+    <select id="findById" resultMap="calendarResultMap">
+        SELECT id, name, owner_id, is_personal, created_at
+        FROM calendars
+        WHERE id = #{id}
+    </select>
+
+    <select id="findCalendarsForUser" resultMap="calendarSummaryResultMap">
+        SELECT
+            c.id,
+            c.name,
+            c.is_personal,
+            cm.role,
+            (SELECT COUNT(*) FROM calendar_members cm2
+                WHERE cm2.calendar_id = c.id AND cm2.status = 'accepted') AS member_count
+        FROM calendars c
+        JOIN calendar_members cm ON cm.calendar_id = c.id
+        WHERE cm.user_id = #{userId} AND cm.status = 'accepted'
+        ORDER BY c.is_personal DESC, c.created_at ASC
+    </select>
+
+</mapper>

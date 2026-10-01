@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${calendar.name} + ' - 共有カレンダーアプリ'">カレンダー詳細</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; text-align: center; padding: 4px; vertical-align: top; height: 56px; width: 14%; }
+        th { background: #f5f5f5; font-size: 12px; }
+        .day-num { font-size: 12px; color: #555; }
+        .sched { font-size: 10px; background: #e6f1fb; border-radius: 4px; padding: 1px 3px; margin-top: 2px; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    </style>
+</head>
+<body>
+<div style="max-width:720px;margin:40px auto;padding:24px;">
+    <p><a th:href="@{/calendars}">&larr; カレンダー一覧</a></p>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h1 style="font-size:18px;margin:0;" th:text="${calendar.name}">カレンダー名</h1>
+        <span style="font-size:12px;color:#777;" th:text="'メンバー ' + ${memberCount} + '人'">メンバー数</span>
+    </div>
+
+    <div th:if="${invite}" style="background:#eef6ff;border:1px solid #bcd;border-radius:8px;padding:12px;margin:12px 0;">
+        <div style="font-size:12px;color:#555;">このコードを友人に共有してください(7日間有効)</div>
+        <div style="font-size:20px;font-weight:bold;letter-spacing:3px;" th:text="${invite}">A7K2P9</div>
+    </div>
+
+    <div th:if="${isOwner and !calendar.personal}" style="margin:12px 0;">
+        <form th:action="@{/calendars/{id}/invite(id=${calendar.id})}" method="post" style="margin:0;">
+            <button type="submit">招待コードを発行する</button>
+        </form>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;">
+        <a th:href="@{/calendars/{id}(id=${calendar.id}, year=${yearMonth.minusMonths(1).year}, month=${yearMonth.minusMonths(1).monthValue})}">&lsaquo; 前月</a>
+        <strong th:text="${yearMonth.year} + '年' + ${yearMonth.monthValue} + '月'">2026年10月</strong>
+        <a th:href="@{/calendars/{id}(id=${calendar.id}, year=${yearMonth.plusMonths(1).year}, month=${yearMonth.plusMonths(1).monthValue})}">翌月 &rsaquo;</a>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th><th>日</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="week : ${#numbers.sequence(0, cells.size() / 7 - 1)}">
+            <td th:each="col : ${#numbers.sequence(0, 6)}">
+                <th:block th:with="dayNum=${cells.get(week * 7 + col)}">
+                    <div th:if="${dayNum != 0}">
+                        <div class="day-num" th:text="${dayNum}">1</div>
+                        <div class="sched" th:each="s : ${schedulesByDay.get(dayNum)}" th:text="${s.title}">予定</div>
+                    </div>
+                </th:block>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p style="font-size:12px;color:#999;margin-top:16px;">
+        予定の登録・編集はまだ実装中です(担当:C)。
+    </p>
+</div>
+</body>
+</html>
