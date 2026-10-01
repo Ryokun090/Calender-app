@@ -1,10 +1,22 @@
 spring:
-  application:
-    name: calendar-app
-  profiles:
-    active: local
-  thymeleaf:
-    cache: false   # 開発中はキャッシュ無効。本番前にtrueへ戻す
+  datasource:
+    url: jdbc:mysql://localhost:3306/calendar_app?useSSL=false&serverTimezone=Asia/Tokyo&characterEncoding=utf8
+    username: root
+    password:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test04954919@gmail.com
+    password: rnslklilgrtnbulj
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: smtp.gmail.com
+
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml

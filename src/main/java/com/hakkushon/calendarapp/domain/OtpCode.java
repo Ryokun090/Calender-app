@@ -8,6 +8,7 @@ public class OtpCode {
     private Long userId;
     private String code;
     private LocalDateTime expiresAt;
+    private int attemptCount;
     private boolean isUsed;
     private LocalDateTime createdAt;
 
@@ -22,6 +23,9 @@ public class OtpCode {
 
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+
+    public int getAttemptCount() { return attemptCount; }
+    public void setAttemptCount(int attemptCount) { this.attemptCount = attemptCount; }
 
     public boolean isUsed() { return isUsed; }
     public void setUsed(boolean used) { isUsed = used; }

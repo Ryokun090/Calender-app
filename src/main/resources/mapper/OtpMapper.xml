@@ -7,17 +7,18 @@
         <result property="userId" column="user_id"/>
         <result property="code" column="code"/>
         <result property="expiresAt" column="expires_at"/>
+        <result property="attemptCount" column="attempt_count"/>
         <result property="isUsed" column="is_used"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO otp_codes (user_id, code, expires_at, is_used)
-        VALUES (#{userId}, #{code}, #{expiresAt}, false)
+        INSERT INTO otp_codes (user_id, code, expires_at, attempt_count, is_used)
+        VALUES (#{userId}, #{code}, #{expiresAt}, 0, false)
     </insert>
 
     <select id="findLatestUnusedByUserId" resultMap="otpResultMap">
-        SELECT id, user_id, code, expires_at, is_used, created_at
+        SELECT id, user_id, code, expires_at, attempt_count, is_used, created_at
         FROM otp_codes
         WHERE user_id = #{userId} AND is_used = false
         ORDER BY created_at DESC
@@ -26,6 +27,10 @@
 
     <update id="markUsed">
         UPDATE otp_codes SET is_used = true WHERE id = #{id}
+    </update>
+
+    <update id="incrementAttempt">
+        UPDATE otp_codes SET attempt_count = attempt_count + 1 WHERE id = #{id}
     </update>
 
 </mapper>

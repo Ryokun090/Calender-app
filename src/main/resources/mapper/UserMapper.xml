@@ -28,4 +28,8 @@
         VALUES (#{name}, #{email}, #{passwordHash}, false)
     </insert>
 
+    <update id="updateTwoFaEnabled">
+        UPDATE users SET is_2fa_enabled = #{enabled} WHERE id = #{id}
+    </update>
+
 </mapper>

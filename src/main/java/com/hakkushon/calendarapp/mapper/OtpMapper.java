@@ -15,4 +15,6 @@ public interface OtpMapper {
     Optional<OtpCode> findLatestUnusedByUserId(@Param("userId") Long userId);
 
     void markUsed(@Param("id") Long id);
+
+    void incrementAttempt(@Param("id") Long id);
 }

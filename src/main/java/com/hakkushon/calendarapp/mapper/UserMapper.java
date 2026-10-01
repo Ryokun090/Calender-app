@@ -15,4 +15,6 @@ public interface UserMapper {
     Optional<User> findById(@Param("id") Long id);
 
     void insert(User user);
+
+    void updateTwoFaEnabled(@Param("id") Long id, @Param("enabled") boolean enabled);
 }

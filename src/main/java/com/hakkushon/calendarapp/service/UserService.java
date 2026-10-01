@@ -49,11 +49,13 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * 新規登録。
+     * 新規登録。成功したら作成したユーザーのidを返す
+     * (登録直後に「2段階認証を設定するか」を尋ねる画面で使うため)。
+     *
      * @throws IllegalStateException すでに同じメールアドレスが登録済みの場合
      */
     @Transactional
-    public void signup(SignupForm form) {
+    public Long signup(SignupForm form) {
         if (userMapper.findByEmail(form.getEmail()).isPresent()) {
             throw new IllegalStateException("このメールアドレスはすでに登録されています");
         }
@@ -62,5 +64,15 @@ public class UserService implements UserDetailsService {
         user.setEmail(form.getEmail());
         user.setPasswordHash(passwordEncoder.encode(form.getPassword()));
         userMapper.insert(user);
+        return user.getId();
+    }
+
+    /**
+     * 新規登録直後の「2段階認証を設定しますか」画面で、
+     * 「設定する」が選ばれたときに呼ぶ。
+     */
+    @Transactional
+    public void enableTwoFactor(Long userId) {
+        userMapper.updateTwoFaEnabled(userId, true);
     }
 }
