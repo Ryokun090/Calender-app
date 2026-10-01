@@ -27,6 +27,7 @@ CREATE TABLE otp_codes (
   user_id         BIGINT      NOT NULL,
   code            VARCHAR(6)  NOT NULL,        -- 6桁の数字コード
   expires_at      DATETIME    NOT NULL,        -- 発行から5分程度を想定
+  attempt_count   INT         NOT NULL DEFAULT 0,  -- 誤入力の回数(上限超えでロック)
   is_used         BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
