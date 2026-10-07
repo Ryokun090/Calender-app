@@ -1,10 +1,13 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.hakkushon.calendarapp.mapper.ScheduleMapper">
 
     <resultMap id="scheduleResultMap" type="com.hakkushon.calendarapp.domain.Schedule">
         <id property="id" column="id"/>
         <result property="calendarId" column="calendar_id"/>
+        <result property="googleEventId" column="google_event_id"/>
         <result property="title" column="title"/>
         <result property="description" column="description"/>
         <result property="location" column="location"/>
@@ -15,13 +18,46 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <!-- 月表示・空き日程の両方で使う重なり判定クエリ。Bが作成済み。 -->
     <select id="findByCalendarAndRange" resultMap="scheduleResultMap">
-        SELECT id, calendar_id, title, description, location, start_time, end_time, created_by, created_at, updated_at
+        SELECT id, calendar_id, google_event_id, title, description, location,
+               start_time, end_time, created_by, created_at, updated_at
         FROM schedules
         WHERE calendar_id = #{calendarId}
           AND start_time &lt; #{rangeEnd}
           AND end_time &gt; #{rangeStart}
         ORDER BY start_time ASC
     </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO schedules
+            (calendar_id, google_event_id, title, description, location,
+             start_time, end_time, created_by, created_at, updated_at)
+        VALUES
+            (#{calendarId}, #{googleEventId}, #{title}, #{description}, #{location},
+             #{startTime}, #{endTime}, #{createdBy}, NOW(), NOW())
+    </insert>
+
+    <select id="findById" resultMap="scheduleResultMap">
+        SELECT id, calendar_id, google_event_id, title, description, location,
+               start_time, end_time, created_by, created_at, updated_at
+        FROM schedules
+        WHERE id = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE schedules
+        SET title = #{title},
+            description = #{description},
+            location = #{location},
+            start_time = #{startTime},
+            end_time = #{endTime},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM schedules WHERE id = #{id}
+    </delete>
 
 </mapper>

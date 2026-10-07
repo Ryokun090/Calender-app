@@ -27,4 +27,10 @@
         WHERE calendar_id = #{calendarId} AND status = 'accepted'
     </select>
 
+    <select id="findMemberUserIds" resultType="java.lang.Long">
+        SELECT user_id
+        FROM calendar_members
+        WHERE calendar_id = #{calendarId} AND status = 'accepted'
+    </select>
+
 </mapper>

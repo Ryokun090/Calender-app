@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title th:text="${calendar.name} + ' の空き日程調整'">空き日程調整</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif; }
+.poll-item { display:block; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:8px; text-decoration:none; color:inherit; }
+.badge { font-size:11px; padding:2px 8px; border-radius:10px; }
+.badge-open { background:#e6f1fb; color:#185fa5; }
+.badge-confirmed { background:#e8f3df; color:#3b6d11; }
+</style>
+</head>
+<body>
+<div style="max-width:480px;margin:40px auto;padding:0 16px;">
+    <p><a th:href="@{/calendars/{id}(id=${calendar.id})}">&larr; カレンダーに戻る</a></p>
+    <h1 style="font-size:18px;" th:text="${calendar.name} + ' の空き日程調整'">空き日程調整</h1>
+
+    <p style="margin:16px 0;">
+        <a th:href="@{/calendars/{id}/free-slots/add(id=${calendar.id})}">
+            <button type="button">+ 新しい候補を作る</button>
+        </a>
+    </p>
+
+    <div th:if="${#lists.isEmpty(polls)}" style="color:#999;font-size:13px;">
+        まだ候補日程はありません。
+    </div>
+
+    <a class="poll-item" th:each="poll : ${polls}" th:href="@{/polls/{id}(id=${poll.id})}">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong th:text="${poll.title}">タイトル</strong>
+            <span class="badge"
+                  th:classappend="${poll.status == 'open'} ? 'badge-open' : 'badge-confirmed'"
+                  th:text="${poll.status == 'open'} ? '回答受付中' : '確定済み'">状態</span>
+        </div>
+    </a>
+</div>
+</body>
+</html>

@@ -1,5 +1,7 @@
 package com.hakkushon.calendarapp.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -15,4 +17,6 @@ public interface CalendarMemberMapper {
     boolean isMember(@Param("calendarId") Long calendarId, @Param("userId") Long userId);
 
     int countAcceptedMembers(@Param("calendarId") Long calendarId);
+
+    List<Long> findMemberUserIds(@Param("calendarId") Long calendarId);
 }

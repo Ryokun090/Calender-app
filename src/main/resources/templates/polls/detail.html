@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title th:text="${poll.title} + ' - 空き日程調整'">空き日程調整</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+:root {
+  --surface-2:#ffffff;
+  --surface-1:#f7f6f2;
+  --surface-0:#f1efe8;
+  --text-primary:#1a1a1a;
+  --text-secondary:#5f5e5a;
+  --text-muted:#9a988e;
+  --border:#e2ded2;
+  --border-strong:#c9c4b4;
+  --fill-primary:#1a1a1a;
+  --on-primary:#ffffff;
+  --fill-accent:#378add;
+  --text-accent:#185fa5;
+  --fill-success:#639922;
+  --fill-danger:#e24b4a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 32px 16px;
+  background: var(--surface-0);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+  color: var(--text-primary);
+}
+button {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+button:hover { background: var(--surface-1); }
+button.primary { background: var(--fill-primary); color: var(--on-primary); border: none; }
+a { color: inherit; text-decoration: none; }
+i.ti { line-height: 1; }
+.candidate-card { border:0.5px solid var(--border); border-radius:10px; padding:10px; margin-bottom:8px; background: var(--surface-2); }
+.vote-btn { flex:1; padding:8px; border-radius:8px; border:0.5px solid var(--border-strong); text-align:center; font-size:14px; cursor:pointer; background:var(--surface-2); user-select:none; }
+.vote-btn input { display:none; }
+.vote-btn:has(input[value="yes"]:checked) { background: rgba(99,153,34,0.15); border-color: var(--fill-success); color:#3b6d11; }
+.vote-btn:has(input[value="no"]:checked) { background: rgba(226,75,74,0.15); border-color: var(--fill-danger); color:#a32d2d; }
+</style>
+</head>
+<body>
+<div style="max-width:360px;margin:0 auto;background:var(--surface-1);border-radius:16px;padding:16px;border:0.5px solid var(--border)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <a th:href="@{/calendars/{id}/free-slots(id=${poll.calendarId})}">
+      <i class="ti ti-chevron-down" style="font-size:18px;transform:rotate(90deg)" aria-hidden="true"></i>
+    </a>
+    <div style="font-size:15px;font-weight:500">空き日程調整</div>
+    <span style="width:18px"></span>
+  </div>
+
+  <div style="font-size:17px;font-weight:600;margin-bottom:4px" th:text="${poll.title}">タイトル</div>
+  <div th:if="${poll.location != null and !#strings.isEmpty(poll.location)}"
+       style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">
+    <i class="ti ti-map-pin" aria-hidden="true"></i> <span th:text="${poll.location}">場所</span>
+  </div>
+  <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px"
+       th:text="'メンバー ' + ${totalMembers} + '人中'">メンバー数</div>
+
+  <div th:if="${poll.status == 'confirmed'}" style="background:#e6f1fb;border-radius:8px;padding:10px;margin-bottom:14px;font-size:13px;">
+    この候補日程は確定済みです。
+    <a th:href="@{/schedules/{id}(id=${poll.confirmedScheduleId})}" style="color:var(--text-accent);text-decoration:underline">確定した予定を見る</a>
+  </div>
+
+  <form th:if="${poll.status == 'open'}" th:action="@{/polls/{id}/responses(id=${poll.id})}" method="post">
+    <div th:each="c : ${candidates}" class="candidate-card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:2px"
+           th:text="${#temporals.format(c.startTime, 'M月d日(E)')}">9月20日(日)</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px"
+           th:text="${#temporals.format(c.startTime, 'HH:mm')} + '〜' + ${#temporals.format(c.endTime, 'HH:mm')}">19:00〜21:00</div>
+
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <label class="vote-btn">
+          <input type="radio" th:name="'responses[' + ${c.candidateId} + ']'" value="yes" th:checked="${c.myResponseYes}">
+          ○ 参加できる
+        </label>
+        <label class="vote-btn">
+          <input type="radio" th:name="'responses[' + ${c.candidateId} + ']'" value="no" th:checked="${c.myResponseNo}">
+          × 参加できない
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted)"
+           th:text="'○ ' + ${c.yesCount} + '人 / × ' + ${c.noCount} + '人'">○0人 / ×0人</div>
+    </div>
+
+    <button type="submit" class="primary" style="width:100%;margin-top:6px">回答を保存</button>
+  </form>
+
+  <div th:if="${poll.status == 'open' and isOwner}" style="margin-top:20px;padding-top:14px;border-top:0.5px solid var(--border)">
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px">この候補で確定する(管理者のみ)</div>
+    <form th:each="c : ${candidates}" th:action="@{/polls/{id}/confirm(id=${poll.id})}" method="post" style="margin-bottom:6px">
+      <input type="hidden" name="candidateId" th:value="${c.candidateId}">
+      <button type="submit" style="width:100%;text-align:left;display:flex;justify-content:space-between">
+        <span th:text="${#temporals.format(c.startTime, 'M月d日(E) HH:mm')} + '〜' + ${#temporals.format(c.endTime, 'HH:mm')}">候補</span>
+        <span th:text="'○' + ${c.yesCount}">○0</span>
+      </button>
+    </form>
+  </div>
+
+  <div th:if="${#lists.isEmpty(candidates)}" style="font-size:12px;color:var(--text-muted)">候補日程がありません。</div>
+</div>
+
+</body>
+</html>

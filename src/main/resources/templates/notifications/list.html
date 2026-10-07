@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>通知一覧</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif; }
+.notif-item { display:block; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:8px; text-decoration:none; color:inherit; }
+.notif-item.unread { background:#eef6ff; border-color:#bcd; }
+.notif-date { font-size:11px; color:#999; margin-top:4px; }
+</style>
+</head>
+<body>
+<div style="max-width:480px;margin:40px auto;padding:0 16px;">
+    <p><a th:href="@{/calendars}">&larr; カレンダー一覧</a></p>
+    <h1 style="font-size:18px;">通知一覧</h1>
+
+    <div th:if="${#lists.isEmpty(notifications)}" style="color:#999;font-size:13px;">
+        通知はありません。
+    </div>
+
+    <a th:each="n : ${notifications}"
+       class="notif-item" th:classappend="${!n.read} ? 'unread'"
+       th:href="@{/notifications/{id}/open(id=${n.id})}">
+        <div style="font-size:13px;" th:text="${n.message}">通知メッセージ</div>
+        <div class="notif-date" th:text="${#temporals.format(n.createdAt, 'yyyy/MM/dd HH:mm')}">2026/09/20 19:00</div>
+    </a>
+</div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hakkushon.calendarapp.mapper.CommentMapper">
+
+    <resultMap id="commentResultMap" type="com.hakkushon.calendarapp.domain.Comment">
+        <id property="id" column="id"/>
+        <result property="scheduleId" column="schedule_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="authorName" column="author_name"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comments (schedule_id, user_id, content, created_at)
+        VALUES (#{scheduleId}, #{userId}, #{content}, NOW())
+    </insert>
+
+    <select id="findByScheduleId" resultMap="commentResultMap">
+        SELECT c.id, c.schedule_id, c.user_id, u.name AS author_name, c.content, c.created_at
+        FROM comments c
+        JOIN users u ON u.id = c.user_id
+        WHERE c.schedule_id = #{scheduleId}
+        ORDER BY c.created_at ASC
+    </select>
+
+</mapper>
