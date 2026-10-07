@@ -8,7 +8,7 @@
         th, td { border: 1px solid #ddd; text-align: center; padding: 4px; vertical-align: top; height: 56px; width: 14%; }
         th { background: #f5f5f5; font-size: 12px; }
         .day-num { font-size: 12px; color: #555; }
-        .sched { font-size: 10px; background: #e6f1fb; border-radius: 4px; padding: 1px 3px; margin-top: 2px; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .sched { display: block; font-size: 10px; background: #e6f1fb; border-radius: 4px; padding: 1px 3px; margin-top: 2px; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-decoration: none; color: inherit; }
     </style>
 </head>
 <body>
@@ -49,7 +49,7 @@
                 <th:block th:with="dayNum=${cells.get(week * 7 + col)}">
                     <div th:if="${dayNum != 0}">
                         <div class="day-num" th:text="${dayNum}">1</div>
-                        <div class="sched" th:each="s : ${schedulesByDay.get(dayNum)}" th:text="${s.title}">予定</div>
+                        <a class="sched" th:each="s : ${schedulesByDay.get(dayNum)}" th:href="@{/schedules/{id}(id=${s.id})}" th:text="${s.title}">予定</a>
                     </div>
                 </th:block>
             </td>
@@ -57,9 +57,16 @@
         </tbody>
     </table>
 
-    <p style="font-size:12px;color:#999;margin-top:16px;">
-        予定の登録・編集はまだ実装中です(担当:C)。
-    </p>
+    <div style="margin-top:16px;">
+        <a th:href="@{/calendars/{id}/schedules/add(id=${calendar.id})}">
+            <button type="button">予定を追加</button>
+        </a>
+    </div>
+    <div style="margin-top:8px;">
+        <a th:href="@{/calendars/{id}/free-slots(id=${calendar.id})}">
+            <button type="button">空き日程を見る</button>
+        </a>
+    </div>
 </div>
 </body>
 </html>

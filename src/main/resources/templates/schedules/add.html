@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>予定を追加</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+:root {
+  --surface-2:#ffffff;
+  --surface-1:#f7f6f2;
+  --surface-0:#f1efe8;
+  --text-primary:#1a1a1a;
+  --text-secondary:#5f5e5a;
+  --text-muted:#9a988e;
+  --border:#e2ded2;
+  --border-strong:#c9c4b4;
+  --border-accent:#378add;
+  --fill-primary:#1a1a1a;
+  --on-primary:#ffffff;
+  --fill-accent:#378add;
+  --fill-danger:#e24b4a;
+  --text-accent:#185fa5;
+  --text-danger:#a32d2d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 32px 16px;
+  background: var(--surface-0);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+  color: var(--text-primary);
+}
+input, select, textarea {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+textarea { resize: vertical; }
+button {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+button:hover { background: var(--surface-1); }
+button.primary {
+  background: var(--fill-primary);
+  color: var(--on-primary);
+  border: none;
+}
+.error-text {
+  font-size: 11px;
+  color: var(--text-danger);
+  margin-top: 2px;
+}
+i.ti { line-height: 1; }
+</style>
+</head>
+<body>
+<div style="max-width:360px;margin:0 auto;background:var(--surface-1);border-radius:16px;padding:16px;border:0.5px solid var(--border)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <a th:href="@{/calendars/{id}(id=${calendar.id})}" style="color:inherit;text-decoration:none">
+      <i class="ti ti-x" style="font-size:18px" aria-hidden="true"></i>
+    </a>
+    <div style="font-size:15px;font-weight:500">予定を追加</div>
+    <span style="width:18px"></span>
+  </div>
+
+  <form id="scheduleForm" th:action="@{/calendars/{id}/schedules(id=${calendar.id})}"
+        th:object="${createScheduleForm}" method="post">
+
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">対象カレンダー</div>
+      <input type="text" th:value="${calendar.name}" disabled style="width:100%">
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">タイトル</div>
+      <input type="text" th:field="*{title}" placeholder="サークル飲み会" style="width:100%">
+      <div class="error-text" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+    </div>
+
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">日程(まとめて追加できます)</div>
+    <div class="error-text" th:if="${#fields.hasErrors('entries')}" th:errors="*{entries}" style="margin-bottom:8px"></div>
+
+    <div id="entryList">
+      <div class="entry-row" th:each="entry, status : *{entries}"
+           style="border:0.5px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;color:var(--text-muted)" th:text="'日程 ' + (${status.index} + 1)">日程 1</span>
+          <i class="ti ti-trash remove-entry" style="font-size:14px;color:var(--text-muted);cursor:pointer" aria-hidden="true"></i>
+        </div>
+        <input type="date" th:field="*{entries[__${status.index}__].date}" style="width:100%;margin-bottom:6px">
+        <div class="error-text" th:if="${#fields.hasErrors('entries[__${status.index}__].date')}"
+             th:errors="*{entries[__${status.index}__].date}"></div>
+        <div style="display:flex;gap:6px">
+          <input type="time" th:field="*{entries[__${status.index}__].startTime}" style="flex:1">
+          <span style="align-self:center;font-size:12px;color:var(--text-muted)">〜</span>
+          <input type="time" th:field="*{entries[__${status.index}__].endTime}" style="flex:1">
+        </div>
+        <div class="error-text"
+             th:if="${#fields.hasErrors('entries[__${status.index}__].startTime')} or ${#fields.hasErrors('entries[__${status.index}__].endTime')} or ${#fields.hasErrors('entries[__${status.index}__].timeRangeValid')}">
+          時刻を確認してください
+        </div>
+      </div>
+    </div>
+
+    <!-- JSで行を追加するときのテンプレート(送信はされない) -->
+    <template id="entryTemplate">
+      <div class="entry-row" style="border:0.5px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span class="entry-label" style="font-size:12px;color:var(--text-muted)">日程</span>
+          <i class="ti ti-trash remove-entry" style="font-size:14px;color:var(--text-muted);cursor:pointer" aria-hidden="true"></i>
+        </div>
+        <input type="date" class="entry-date" style="width:100%;margin-bottom:6px">
+        <div style="display:flex;gap:6px">
+          <input type="time" class="entry-start" value="19:00" style="flex:1">
+          <span style="align-self:center;font-size:12px;color:var(--text-muted)">〜</span>
+          <input type="time" class="entry-end" value="21:00" style="flex:1">
+        </div>
+      </div>
+    </template>
+
+    <button type="button" id="addEntryButton" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:14px">
+      <i class="ti ti-plus" style="font-size:16px" aria-hidden="true"></i>日程を追加
+    </button>
+
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">場所(任意)</div>
+      <input type="text" th:field="*{location}" placeholder="居酒屋など" style="width:100%">
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">説明(任意)</div>
+      <textarea th:field="*{description}" placeholder="持ち物や集合場所など" style="width:100%;height:56px"></textarea>
+    </div>
+
+    <button type="submit" class="primary" style="width:100%">保存</button>
+  </form>
+</div>
+
+<script th:inline="none">
+(function () {
+  var entryList = document.getElementById('entryList');
+  var template = document.getElementById('entryTemplate');
+  var addButton = document.getElementById('addEntryButton');
+
+  // 既存行の数からスタートして、インデックスがサーバー側のバインドと衝突しないようにする
+  var nextIndex = entryList.querySelectorAll('.entry-row').length;
+
+  function renumberLabels() {
+    var rows = entryList.querySelectorAll('.entry-row');
+    rows.forEach(function (row, i) {
+      var label = row.querySelector('span');
+      if (label) {
+        label.textContent = '日程 ' + (i + 1);
+      }
+    });
+  }
+
+  addButton.addEventListener('click', function () {
+    var clone = template.content.cloneNode(true);
+    var row = clone.querySelector('.entry-row');
+
+    var dateInput = clone.querySelector('.entry-date');
+    dateInput.setAttribute('name', 'entries[' + nextIndex + '].date');
+
+    var startInput = clone.querySelector('.entry-start');
+    startInput.setAttribute('name', 'entries[' + nextIndex + '].startTime');
+
+    var endInput = clone.querySelector('.entry-end');
+    endInput.setAttribute('name', 'entries[' + nextIndex + '].endTime');
+
+    entryList.appendChild(row);
+    nextIndex++;
+    renumberLabels();
+  });
+
+  entryList.addEventListener('click', function (event) {
+    if (event.target.classList.contains('remove-entry')) {
+      var rows = entryList.querySelectorAll('.entry-row');
+      if (rows.length <= 1) {
+        return; // 最低1件は残す
+      }
+      event.target.closest('.entry-row').remove();
+      renumberLabels();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

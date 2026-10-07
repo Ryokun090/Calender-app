@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>予定詳細</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+:root {
+  --surface-2:#ffffff;
+  --surface-1:#f7f6f2;
+  --surface-0:#f1efe8;
+  --text-primary:#1a1a1a;
+  --text-secondary:#5f5e5a;
+  --text-muted:#9a988e;
+  --border:#e2ded2;
+  --border-strong:#c9c4b4;
+  --fill-primary:#1a1a1a;
+  --on-primary:#ffffff;
+  --fill-accent:#378add;
+  --fill-danger:#e24b4a;
+  --text-danger:#a32d2d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 32px 16px;
+  background: var(--surface-0);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+  color: var(--text-primary);
+}
+input, textarea {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+textarea { resize: vertical; }
+button {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+button:hover { background: var(--surface-1); }
+button.danger { color: var(--fill-danger); }
+button.primary { background: var(--fill-primary); color: var(--on-primary); border: none; }
+i.ti { line-height: 1; }
+a { color: inherit; text-decoration: none; }
+.comment-item { padding:8px 0; border-bottom:0.5px solid var(--border); }
+.comment-item:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<div style="max-width:360px;margin:0 auto;background:var(--surface-1);border-radius:16px;padding:16px;border:0.5px solid var(--border)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <a th:href="@{/calendars/{id}(id=${schedule.calendarId})}">
+      <i class="ti ti-chevron-down" style="font-size:18px;transform:rotate(90deg)" aria-hidden="true"></i>
+    </a>
+    <div style="font-size:15px;font-weight:500">予定詳細</div>
+    <span style="width:18px"></span>
+  </div>
+
+  <div style="margin-bottom:4px">
+    <div style="width:4px;height:24px;background:var(--fill-accent);border-radius:2px;display:inline-block;vertical-align:middle;margin-right:8px"></div>
+    <span style="font-size:17px;font-weight:600" th:text="${schedule.title}">タイトル</span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:6px;margin:12px 0;font-size:13px;color:var(--text-secondary)">
+    <i class="ti ti-calendar" aria-hidden="true"></i>
+    <span th:text="${#temporals.format(schedule.startTime, 'yyyy年M月d日')}">2026年9月20日</span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;font-size:13px;color:var(--text-secondary)">
+    <i class="ti ti-clock" aria-hidden="true"></i>
+    <span th:text="${#temporals.format(schedule.startTime, 'HH:mm')} + '〜' + ${#temporals.format(schedule.endTime, 'HH:mm')}">19:00〜21:00</span>
+  </div>
+
+  <div th:if="${schedule.location != null and !#strings.isEmpty(schedule.location)}"
+       style="display:flex;align-items:center;gap:6px;margin-bottom:12px;font-size:13px;color:var(--text-secondary)">
+    <i class="ti ti-map-pin" aria-hidden="true"></i>
+    <span th:text="${schedule.location}">居酒屋</span>
+  </div>
+
+  <div th:if="${schedule.description != null and !#strings.isEmpty(schedule.description)}"
+       style="padding:10px;border:0.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-primary);margin-bottom:16px;white-space:pre-wrap"
+       th:text="${schedule.description}">
+    説明
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <a th:href="@{/schedules/{id}/edit(id=${schedule.id})}" style="flex:1">
+      <button type="button" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-pencil" style="font-size:16px" aria-hidden="true"></i>編集
+      </button>
+    </a>
+    <form th:action="@{/schedules/{id}/delete(id=${schedule.id})}" method="post" style="flex:1" onsubmit="return confirm('この予定を削除しますか？');">
+      <button type="submit" class="danger" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-trash" style="font-size:16px" aria-hidden="true"></i>削除
+      </button>
+    </form>
+  </div>
+
+  <div style="padding-top:12px;border-top:0.5px solid var(--border)">
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px">コメント</div>
+
+    <div th:if="${#lists.isEmpty(comments)}" style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
+      まだコメントはありません。
+    </div>
+
+    <div th:each="c : ${comments}" class="comment-item">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:12px;font-weight:500" th:text="${c.authorName}">投稿者</span>
+        <span style="font-size:10px;color:var(--text-muted)" th:text="${#temporals.format(c.createdAt, 'M/d HH:mm')}">9/20 19:00</span>
+      </div>
+      <div style="font-size:13px;white-space:pre-wrap" th:text="${c.content}">コメント本文</div>
+    </div>
+
+    <form th:action="@{/schedules/{id}/comments(id=${schedule.id})}" method="post" style="margin-top:10px">
+      <textarea name="content" placeholder="コメントを入力" style="width:100%;height:56px;margin-bottom:8px"></textarea>
+      <button type="submit" class="primary" style="width:100%">コメントを投稿</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

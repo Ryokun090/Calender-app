@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>空き日程を調整</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+:root {
+  --surface-2:#ffffff;
+  --surface-1:#f7f6f2;
+  --surface-0:#f1efe8;
+  --text-primary:#1a1a1a;
+  --text-secondary:#5f5e5a;
+  --text-muted:#9a988e;
+  --border:#e2ded2;
+  --border-strong:#c9c4b4;
+  --fill-primary:#1a1a1a;
+  --on-primary:#ffffff;
+  --text-accent:#185fa5;
+  --text-danger:#a32d2d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 32px 16px;
+  background: var(--surface-0);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+  color: var(--text-primary);
+}
+input, textarea {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+textarea { resize: vertical; }
+button {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+button:hover { background: var(--surface-1); }
+button.primary { background: var(--fill-primary); color: var(--on-primary); border: none; }
+.error-text { font-size: 11px; color: var(--text-danger); margin-top: 2px; }
+a { color: inherit; text-decoration: none; }
+i.ti { line-height: 1; }
+</style>
+</head>
+<body>
+<div style="max-width:360px;margin:0 auto;background:var(--surface-1);border-radius:16px;padding:16px;border:0.5px solid var(--border)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <a th:href="@{/calendars/{id}/free-slots(id=${calendar.id})}">
+      <i class="ti ti-x" style="font-size:18px" aria-hidden="true"></i>
+    </a>
+    <div style="font-size:15px;font-weight:500">空き日程を調整</div>
+    <span style="width:18px"></span>
+  </div>
+
+  <p style="font-size:12px;color:var(--text-secondary);margin:0 0 14px">
+    候補日程をいくつか提示して、メンバーに○×で回答してもらいます。
+  </p>
+
+  <form id="pollForm" th:action="@{/calendars/{id}/free-slots(id=${calendar.id})}"
+        th:object="${createPollForm}" method="post">
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">タイトル</div>
+      <input type="text" th:field="*{title}" placeholder="忘年会" style="width:100%">
+      <div class="error-text" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+    </div>
+
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">候補日程(複数提示できます)</div>
+    <div class="error-text" th:if="${#fields.hasErrors('candidates')}" th:errors="*{candidates}" style="margin-bottom:8px"></div>
+
+    <div id="entryList">
+      <div class="entry-row" th:each="entry, status : *{candidates}"
+           style="border:0.5px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;color:var(--text-muted)" th:text="'候補 ' + (${status.index} + 1)">候補 1</span>
+          <i class="ti ti-trash remove-entry" style="font-size:14px;color:var(--text-muted);cursor:pointer" aria-hidden="true"></i>
+        </div>
+        <input type="date" th:field="*{candidates[__${status.index}__].date}" style="width:100%;margin-bottom:6px">
+        <div class="error-text" th:if="${#fields.hasErrors('candidates[__${status.index}__].date')}"
+             th:errors="*{candidates[__${status.index}__].date}"></div>
+        <div style="display:flex;gap:6px">
+          <input type="time" th:field="*{candidates[__${status.index}__].startTime}" style="flex:1">
+          <span style="align-self:center;font-size:12px;color:var(--text-muted)">〜</span>
+          <input type="time" th:field="*{candidates[__${status.index}__].endTime}" style="flex:1">
+        </div>
+      </div>
+    </div>
+
+    <template id="entryTemplate">
+      <div class="entry-row" style="border:0.5px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span class="entry-label" style="font-size:12px;color:var(--text-muted)">候補</span>
+          <i class="ti ti-trash remove-entry" style="font-size:14px;color:var(--text-muted);cursor:pointer" aria-hidden="true"></i>
+        </div>
+        <input type="date" class="entry-date" style="width:100%;margin-bottom:6px">
+        <div style="display:flex;gap:6px">
+          <input type="time" class="entry-start" value="19:00" style="flex:1">
+          <span style="align-self:center;font-size:12px;color:var(--text-muted)">〜</span>
+          <input type="time" class="entry-end" value="21:00" style="flex:1">
+        </div>
+      </div>
+    </template>
+
+    <button type="button" id="addEntryButton" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:14px">
+      <i class="ti ti-plus" style="font-size:16px" aria-hidden="true"></i>候補を追加
+    </button>
+
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">場所(任意)</div>
+      <input type="text" th:field="*{location}" style="width:100%">
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">説明(任意)</div>
+      <textarea th:field="*{description}" style="width:100%;height:56px"></textarea>
+    </div>
+
+    <button type="submit" class="primary" style="width:100%">候補を作成</button>
+  </form>
+</div>
+
+<script th:inline="none">
+(function () {
+  var entryList = document.getElementById('entryList');
+  var template = document.getElementById('entryTemplate');
+  var addButton = document.getElementById('addEntryButton');
+  var nextIndex = entryList.querySelectorAll('.entry-row').length;
+
+  function renumberLabels() {
+    entryList.querySelectorAll('.entry-row').forEach(function (row, i) {
+      var label = row.querySelector('span');
+      if (label) {
+        label.textContent = '候補 ' + (i + 1);
+      }
+    });
+  }
+
+  addButton.addEventListener('click', function () {
+    var clone = template.content.cloneNode(true);
+    var row = clone.querySelector('.entry-row');
+
+    clone.querySelector('.entry-date').setAttribute('name', 'candidates[' + nextIndex + '].date');
+    clone.querySelector('.entry-start').setAttribute('name', 'candidates[' + nextIndex + '].startTime');
+    clone.querySelector('.entry-end').setAttribute('name', 'candidates[' + nextIndex + '].endTime');
+
+    entryList.appendChild(row);
+    nextIndex++;
+    renumberLabels();
+  });
+
+  entryList.addEventListener('click', function (event) {
+    if (event.target.classList.contains('remove-entry')) {
+      if (entryList.querySelectorAll('.entry-row').length <= 1) {
+        return;
+      }
+      event.target.closest('.entry-row').remove();
+      renumberLabels();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

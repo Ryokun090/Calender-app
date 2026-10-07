@@ -3,23 +3,23 @@ package com.hakkushon.calendarapp.domain;
 import java.time.LocalDateTime;
 
 /**
- * 確定済みの予定(schedulesテーブル)。
- * 一括登録は「日程ごとに独立したレコード」として保存するため、
- * 1回の一括登録操作で複数件のScheduleが作られることがある。
+ * 空き日程調整(調整さん型)の候補セット本体(schedule_pollsテーブル)。
+ * statusが"confirmed"になると、confirmedScheduleIdにschedulesの行IDが入る。
  */
-public class Schedule {
+public class SchedulePoll {
+
+    public static final String STATUS_OPEN = "open";
+    public static final String STATUS_CONFIRMED = "confirmed";
 
     private Long id;
     private Long calendarId;
-    private String googleEventId; // 将来のGoogle連携用。現時点では常にnull
     private String title;
     private String description;
     private String location;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private String status; // "open" or "confirmed"
+    private Long confirmedScheduleId;
     private Long createdBy;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
     public Long getId() {
         return id;
@@ -35,14 +35,6 @@ public class Schedule {
 
     public void setCalendarId(Long calendarId) {
         this.calendarId = calendarId;
-    }
-
-    public String getGoogleEventId() {
-        return googleEventId;
-    }
-
-    public void setGoogleEventId(String googleEventId) {
-        this.googleEventId = googleEventId;
     }
 
     public String getTitle() {
@@ -69,20 +61,24 @@ public class Schedule {
         this.location = location;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
+    public String getStatus() {
+        return status;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
+    public boolean isOpen() {
+        return STATUS_OPEN.equals(status);
     }
 
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
+    public Long getConfirmedScheduleId() {
+        return confirmedScheduleId;
+    }
+
+    public void setConfirmedScheduleId(Long confirmedScheduleId) {
+        this.confirmedScheduleId = confirmedScheduleId;
     }
 
     public Long getCreatedBy() {
@@ -99,13 +95,5 @@ public class Schedule {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

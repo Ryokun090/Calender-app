@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>予定を編集</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+:root {
+  --surface-2:#ffffff;
+  --surface-1:#f7f6f2;
+  --surface-0:#f1efe8;
+  --text-primary:#1a1a1a;
+  --text-secondary:#5f5e5a;
+  --text-muted:#9a988e;
+  --border:#e2ded2;
+  --border-strong:#c9c4b4;
+  --fill-primary:#1a1a1a;
+  --on-primary:#ffffff;
+  --text-danger:#a32d2d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 32px 16px;
+  background: var(--surface-0);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+  color: var(--text-primary);
+}
+input, textarea {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+textarea { resize: vertical; }
+button {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+button.primary { background: var(--fill-primary); color: var(--on-primary); border: none; }
+.error-text { font-size: 11px; color: var(--text-danger); margin-top: 2px; }
+a { color: inherit; text-decoration: none; }
+i.ti { line-height: 1; }
+</style>
+</head>
+<body>
+<div style="max-width:360px;margin:0 auto;background:var(--surface-1);border-radius:16px;padding:16px;border:0.5px solid var(--border)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <a th:href="@{/schedules/{id}(id=${schedule.id})}">
+      <i class="ti ti-x" style="font-size:18px" aria-hidden="true"></i>
+    </a>
+    <div style="font-size:15px;font-weight:500">予定を編集</div>
+    <span style="width:18px"></span>
+  </div>
+
+  <form th:action="@{/schedules/{id}(id=${schedule.id})}" th:object="${editScheduleForm}" method="post">
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">タイトル</div>
+      <input type="text" th:field="*{title}" style="width:100%">
+      <div class="error-text" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">日付</div>
+      <input type="date" th:field="*{date}" style="width:100%">
+      <div class="error-text" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">時刻</div>
+      <div style="display:flex;gap:6px">
+        <input type="time" th:field="*{startTime}" style="flex:1">
+        <span style="align-self:center;font-size:12px;color:var(--text-muted)">〜</span>
+        <input type="time" th:field="*{endTime}" style="flex:1">
+      </div>
+      <div class="error-text"
+           th:if="${#fields.hasErrors('startTime')} or ${#fields.hasErrors('endTime')} or ${#fields.hasErrors('timeRangeValid')}">
+        時刻を確認してください
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">場所(任意)</div>
+      <input type="text" th:field="*{location}" style="width:100%">
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">説明(任意)</div>
+      <textarea th:field="*{description}" style="width:100%;height:56px"></textarea>
+    </div>
+
+    <button type="submit" class="primary" style="width:100%">更新する</button>
+  </form>
+</div>
+
+</body>
+</html>

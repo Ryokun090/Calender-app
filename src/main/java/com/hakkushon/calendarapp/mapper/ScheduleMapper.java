@@ -2,23 +2,33 @@ package com.hakkushon.calendarapp.mapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.hakkushon.calendarapp.domain.Schedule;
 
+/**
+ * schedulesテーブルのマッパー。
+ * findByCalendarAndRangeはB(カレンダー管理)が作成済み。
+ * Cではinsert/findById/update/deleteを追加する。
+ */
 @Mapper
 public interface ScheduleMapper {
 
-    /**
-     * 月表示に必要な範囲検索。[rangeStart, rangeEnd) と重なる予定を全部取る
-     * (「範囲重なり」方式。日をまたぐ予定も拾える)。
-     *
-     * C(予定登録)がこのテーブルへの作成・編集・削除を実装する。
-     * ここでは月表示のための読み取りのみ。
-     */
-    List<Schedule> findByCalendarAndRange(@Param("calendarId") Long calendarId,
-                                           @Param("rangeStart") LocalDateTime rangeStart,
-                                           @Param("rangeEnd") LocalDateTime rangeEnd);
+    /** 指定カレンダー内で、指定期間と重なる予定を取得する(月表示で使用)。 */
+    List<Schedule> findByCalendarAndRange(
+            @Param("calendarId") Long calendarId,
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd);
+
+    /** 予定を1件登録する。保存後、schedule.idに生成されたIDが入る。 */
+    int insert(Schedule schedule);
+
+    Optional<Schedule> findById(@Param("id") Long id);
+
+    int update(Schedule schedule);
+
+    int delete(@Param("id") Long id);
 }
