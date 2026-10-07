@@ -17,10 +17,12 @@ public class UserService implements UserDetailsService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final CalendarService calendarService;
 
-    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder) {
+    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder, CalendarService calendarService) {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.calendarService = calendarService;
     }
 
     /**
@@ -51,6 +53,7 @@ public class UserService implements UserDetailsService {
     /**
      * 新規登録。成功したら作成したユーザーのidを返す
      * (登録直後に「2段階認証を設定するか」を尋ねる画面で使うため)。
+     * あわせて、本人だけが所属する個人用カレンダーを自動で1つ作る。
      *
      * @throws IllegalStateException すでに同じメールアドレスが登録済みの場合
      */
@@ -64,6 +67,9 @@ public class UserService implements UserDetailsService {
         user.setEmail(form.getEmail());
         user.setPasswordHash(passwordEncoder.encode(form.getPassword()));
         userMapper.insert(user);
+
+        calendarService.createPersonalCalendarForUser(user.getId());
+
         return user.getId();
     }
 

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hakkushon.calendarapp.mapper.CalendarMemberMapper">
+
+    <insert id="insert">
+        INSERT INTO calendar_members (calendar_id, user_id, role, status)
+        VALUES (#{calendarId}, #{userId}, #{role}, #{status})
+    </insert>
+
+    <select id="isOwner" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM calendar_members
+        WHERE calendar_id = #{calendarId} AND user_id = #{userId}
+          AND role = 'owner' AND status = 'accepted'
+    </select>
+
+    <select id="isMember" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM calendar_members
+        WHERE calendar_id = #{calendarId} AND user_id = #{userId}
+          AND status = 'accepted'
+    </select>
+
+    <select id="countAcceptedMembers" resultType="int">
+        SELECT COUNT(*)
+        FROM calendar_members
+        WHERE calendar_id = #{calendarId} AND status = 'accepted'
+    </select>
+
+</mapper>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hakkushon.calendarapp.mapper.InviteCodeMapper">
+
+    <resultMap id="inviteCodeResultMap" type="com.hakkushon.calendarapp.domain.InviteCode">
+        <id property="id" column="id"/>
+        <result property="calendarId" column="calendar_id"/>
+        <result property="code" column="code"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO invite_codes (calendar_id, code, created_by, expires_at)
+        VALUES (#{calendarId}, #{code}, #{createdBy}, #{expiresAt})
+    </insert>
+
+    <select id="findValidByCode" resultMap="inviteCodeResultMap">
+        SELECT id, calendar_id, code, created_by, expires_at, created_at
+        FROM invite_codes
+        WHERE code = #{code} AND expires_at > NOW()
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+</mapper>

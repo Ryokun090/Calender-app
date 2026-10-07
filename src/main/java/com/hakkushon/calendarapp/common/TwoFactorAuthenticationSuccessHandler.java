@@ -37,8 +37,7 @@ public class TwoFactorAuthenticationSuccessHandler implements AuthenticationSucc
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
 
         if (!loginUser.isTwoFaEnabled()) {
-            // TODO: Bの実装後 "/calendars" に変更
-            response.sendRedirect("/health");
+            response.sendRedirect("/calendars");
             return;
         }
 

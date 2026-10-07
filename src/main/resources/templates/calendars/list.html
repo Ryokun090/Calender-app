@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>カレンダー一覧 - 共有カレンダーアプリ</title>
+</head>
+<body>
+<div style="max-width:480px;margin:40px auto;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h1 style="font-size:18px;margin:0;">カレンダー一覧</h1>
+        <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+            <button type="submit" style="background:none;border:none;color:#357;text-decoration:underline;cursor:pointer;">ログアウト</button>
+        </form>
+    </div>
+
+    <div th:each="cal : ${calendars}"
+         style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;">
+        <a th:href="@{/calendars/{id}(id=${cal.id})}" style="text-decoration:none;color:inherit;flex:1;">
+            <div style="font-weight:bold;" th:text="${cal.name}">カレンダー名</div>
+            <div style="font-size:12px;color:#777;">
+                <span th:if="${cal.personal}">自分のみ</span>
+                <span th:unless="${cal.personal}" th:text="'メンバー ' + ${cal.memberCount} + '人'">メンバー数</span>
+            </div>
+        </a>
+    </div>
+
+    <p th:if="${#lists.isEmpty(calendars)}" style="color:#777;">カレンダーがありません。</p>
+
+    <a th:href="@{/calendars/add}">
+        <button type="button" style="width:100%;margin-top:12px;">+ カレンダーを追加</button>
+    </a>
+</div>
+</body>
+</html>
