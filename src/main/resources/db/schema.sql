@@ -114,13 +114,15 @@ CREATE TABLE poll_candidates (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE poll_responses (
-  poll_candidate_id   BIGINT  NOT NULL,
-  user_id             BIGINT  NOT NULL,
-  is_available        BOOLEAN NOT NULL,
-  responded_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (poll_candidate_id, user_id),
-  FOREIGN KEY (poll_candidate_id) REFERENCES poll_candidates(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id)           REFERENCES users(id)           ON DELETE CASCADE
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  candidate_id    BIGINT NOT NULL,
+  user_id         BIGINT NOT NULL,
+  response        ENUM('yes', 'no') NOT NULL,           -- 'yes'=○ / 'no'=×
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_candidate_user (candidate_id, user_id),  -- 1人1候補につき1回答(再回答はUPDATE)
+  FOREIGN KEY (candidate_id) REFERENCES poll_candidates(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id)      REFERENCES users(id)           ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE comments (
