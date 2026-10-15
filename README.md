@@ -1,8 +1,42 @@
-# calendar-app セットアップ手順
+# calendar-app(共有カレンダーアプリ)
+
+友人・サークル仲間との予定調整向けの共有カレンダー(TimeTreeを参考に、「一括予定登録」と「空き日程調整」を軸にしたもの)。
+Google Calendar APIは使わず、カレンダー・予定・コメント・通知はすべて自前のMySQLで管理する。
+
+- Java 17 / Spring Boot 3.3.4 / Spring Security
+- MyBatis / MySQL 8.0以降 / Thymeleaf
+- 2段階認証コードのメール送信: JavaMailSender + Gmail SMTP
+
+## 接続URL
+
+ベースURL: `http://localhost:8080`
+
+**入口 → http://localhost:8080/auth/login**
+ログインに成功するとカレンダー一覧(`/calendars`)に移動する。2段階認証をONにしたアカウントは、ログイン後に認証コード入力画面(`/auth/verify`)を挟む。
+
+| 担当 | URL | 内容 |
+|---|---|---|
+| A 認証 | `/auth/login` | ログイン |
+| | `/auth/signup` | 新規登録 |
+| | `/auth/signup/2fa-prompt` | 新規登録直後の2段階認証の設定確認 |
+| | `/auth/verify` | 認証コード(6桁)の入力 |
+| | `/health` | 動作確認用(ログイン不要。`OK` と出る) |
+| B カレンダー | `/calendars` | カレンダー一覧 |
+| | `/calendars/add` | カレンダー作成 / 招待コードで参加 |
+| | `/calendars/{id}` | カレンダー詳細(月表示)。`?year=2026&month=10` で月を指定 |
+| C 予定 | `/calendars/{id}/schedules/add` | 予定の登録(日程を複数入れると一括登録) |
+| | `/schedules/{id}` | 予定詳細(コメント欄を含む) |
+| | `/schedules/{id}/edit` | 予定の編集 |
+| D 空き日程 | `/calendars/{id}/free-slots` | そのカレンダーの調整一覧 |
+| | `/calendars/{id}/free-slots/add` | 候補日程を作る |
+| | `/polls/{id}` | 候補への○×回答 / 管理者による確定 |
+| E 通知 | `/notifications` | 通知一覧(クリックで既読になり、該当の予定へ移動) |
+
+フォームから呼ばれるPOST専用のURL(コメント投稿、削除、確定など)は省略している。
 
 ## 1. MySQLの準備
 
-1. ローカルにMySQLを立てる(バージョン8.0以降)
+1. ローカルにMySQLを立てる(バージョン8.0以降。開発ではXAMPPのMySQLを使用)
 2. データベースを作成する
 
 ```sql
@@ -15,12 +49,35 @@ CREATE DATABASE calendar_app CHARACTER SET utf8mb4;
 src/main/resources/db/schema.sql を実行する
 ```
 
+phpMyAdminを使う場合は、`calendar_app` を選んでSQLタブに `schema.sql` の全文を貼って実行する。
+
 ## 2. 接続設定
 
 1. `src/main/resources/application-local.yml.example` をコピーして
    同じ場所に `application-local.yml` という名前で保存する
 2. 中の`username` / `password`を自分のMySQLの認証情報に書き換える
-3. このファイルは `.gitignore` 対象なのでコミットされない(各自バラバラでOK)
+3. 2段階認証のメール送信用に、Gmailの設定を追記する(`.example` に無い場合)
+
+```yaml
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: (送信に使うGmailアドレス)
+    password: (Googleアカウントで発行したアプリパスワード)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+```
+
+4. このファイルは `.gitignore` 対象なのでコミットされない(各自バラバラでOK)
+
+> YAMLのインデントは**スペースのみ**。タブ文字は使えない。
+> 学校のネットワークでメール送信時に `PKIX path building failed` が出る場合は、開発時のみの回避策として
+> `spring.mail.properties.mail.smtp.ssl.trust: smtp.gmail.com` を追加する(本番では使わない)。
 
 ## 3. Eclipseへのインポート
 
@@ -35,24 +92,48 @@ src/main/resources/db/schema.sql を実行する
 2. コンソールに `Started CalendarAppApplication` と出れば起動成功
 3. ブラウザで `http://localhost:8080/health` にアクセスし、`OK` と表示されればOK
 
+> コードを変更したら**アプリを再起動する**こと。再起動し忘れて「直っていない」となることが多い。
+
+## 主な仕様
+
+- **ログイン**:メールアドレス+パスワード。パスワードはBCryptでハッシュ化して保存
+- **2段階認証**:ユーザーごとにON/OFFを選べる。6桁コードをメールで送信。有効期限5分、誤入力5回でロック、再送は30秒空ける
+- **個人用カレンダー**:新規登録時に自動で作られる(`is_personal` で共有カレンダーと区別)
+- **招待コード**:6文字の英数字(紛らわしい文字は除外)、有効期限7日。コードを入力した人はその場でメンバーになる
+- **一括登録**:1回の保存で複数日程を登録。1件でも失敗したら全件ロールバック
+- **空き日程調整**:候補を出す → メンバーが○×で回答 → カレンダーのオーナーが1つ選んで確定すると、予定として登録される
+- **コメント通知**:予定にコメントすると、同じカレンダーの他メンバー全員に通知が作られる(コメントは500文字まで)
+
 ## パッケージ構成
 
 ```
 controller/  … 画面・APIの入り口
-service/     … ビジネスロジック
+service/     … ビジネスロジック(トランザクションはここ)
 mapper/      … MyBatisのマッパーインターフェース(対応するXMLは resources/mapper/ に置く)
 domain/      … テーブルに対応するエンティティクラス
 dto/         … 画面⇔Controller間のデータ受け渡し用クラス
 common/      … 全ドメイン共通の部品(LoginUser, CalendarAuthService, SecurityConfigなど)
 ```
 
+テンプレートは `src/main/resources/templates/` の下に、機能ごとのフォルダ(`auth/` `calendars/` `schedules/` `freeslots/` `polls/` `notifications/`)で置く。
+
 ## 重要な共通ルール
 
-- ログイン中ユーザーの取得は必ず `common.LoginUser` 経由で行うこと
+- ログイン中ユーザーの取得は必ず `common.LoginUser` 経由で行うこと(`@AuthenticationPrincipal LoginUser`)
 - カレンダーの権限判定(owner/member)は必ず `common.CalendarAuthService` 経由で行うこと
 - 詳しいチーム開発ルールは別途共有している「開発ガイドライン.md」を参照
 
-## 注意
+## 既知の制限
 
-`common/SecurityConfig.java` は現時点では全リクエストを許可する暫定設定になっている。
-認証機能の実装(担当A)が完了次第、正式な設定に差し替える。
+- 空き日程で確定した予定を後から削除すると、調整側は「確定済み」のまま残り、「確定した予定は削除されました」と表示される(仕様)
+- 通知はコメント投稿時のみ作成される(招待参加・候補確定時の通知、翌日の予定のリマインドは未実装)
+- 通知一覧へのリンクは画面にまだ無く、URLを直接開く
+
+## DBの定義が変わった時
+
+`schema.sql` が全員のDB構築の基準になる。更新があったら手元のDBも合わせること。
+たとえば `poll_responses` は定義を変更したため、古い定義のDBでは空き日程の回答画面が `Unknown column` エラーになる。その場合は、次を実行してから `schema.sql` 内の新しい `CREATE TABLE poll_responses` を流す。
+
+```sql
+DROP TABLE IF EXISTS poll_responses;
+```
