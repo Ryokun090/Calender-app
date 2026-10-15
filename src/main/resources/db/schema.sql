@@ -3,6 +3,10 @@
 -- MySQL 8.0以降を想定(CHECK制約が実際に効くバージョン)
 -- ============================================================
 
+-- DB作成(DB・テーブルが何も無い状態から作る前提)
+CREATE DATABASE calendar_app CHARACTER SET utf8mb4;
+USE calendar_app;
+
 CREATE TABLE users (
   id                BIGINT AUTO_INCREMENT PRIMARY KEY,
   name              VARCHAR(50)  NOT NULL,
