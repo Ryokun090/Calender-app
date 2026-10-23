@@ -43,6 +43,9 @@
         .cal-jump input { height: 36px; width: auto; padding: 0 10px; }
         .cal-jump .sm-btn { height: 36px; padding: 0 14px; }
 
+        .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: -6px 0 14px; font-size: 11px; color: var(--sm-sub); }
+        .cal-legend .lg { display: inline-flex; align-items: center; gap: 6px; }
+        .cal-legend i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
         .cal-card { background: var(--sm-line); border: 1px solid var(--sm-line); border-radius: 10px; overflow: hidden; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; }
         .cal-dow { background: #fff; text-align: center; font-size: 11px; font-weight: 500; color: var(--sm-sub); padding: 12px 0; }
         .cal-cell { background: #fff; min-height: 96px; padding: 8px 10px; min-width: 0; }
@@ -108,6 +111,7 @@
 
     <!-- 月表示 -->
     <main class="cal-main">
+        <div class="sm-alert" th:if="${message}" th:text="${message}">メッセージ</div>
         <div class="cal-toolbar">
             <h1 class="cal-month" th:text="${yearMonth.year} + '年' + ${yearMonth.monthValue} + '月'">2026年10月</h1>
             <a class="cal-today" th:href="@{/calendars/{id}(id=${calendar.id})}">今日</a>
@@ -122,6 +126,11 @@
             </form>
         </div>
 
+        <!-- 色の凡例(予定の色 = 作った人) -->
+        <div class="cal-legend" th:if="${members.size() > 1}">
+            <span class="lg" th:each="m : ${members}"><i th:style="'background:' + ${userColors.get(m.userId)}"></i><span th:text="${m.name}">名前</span></span>
+        </div>
+
         <div class="cal-card">
             <div class="cal-dow">月</div><div class="cal-dow">火</div><div class="cal-dow">水</div><div class="cal-dow">木</div><div class="cal-dow">金</div><div class="cal-dow">土</div><div class="cal-dow">日</div>
             <th:block th:each="idx : ${#numbers.sequence(0, cells.size() - 1)}">
@@ -130,7 +139,7 @@
                     <th:block th:if="${dayNum != 0}">
                         <div class="cal-num"><span th:text="${dayNum}">1</span></div>
                         <a class="cal-chip" th:each="s : ${schedulesByDay.get(dayNum)}"
-                           th:href="@{/schedules/{id}(id=${s.id})}" th:style="'background:' + ${calendarColor}"
+                           th:href="@{/schedules/{id}(id=${s.id})}" th:style="'background:' + ${userColors.get(s.createdBy) ?: calendarColor}"
                            th:title="${s.title}" th:text="${s.title}">予定</a>
                     </th:block>
                 </div>

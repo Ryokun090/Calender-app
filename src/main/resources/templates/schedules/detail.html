@@ -36,6 +36,9 @@
     <p class="when"
        th:text="${#temporals.format(schedule.startTime, 'yyyy年M月d日')} + ' ' + ${#temporals.format(schedule.startTime, 'HH:mm')} + '〜' + ${#temporals.format(schedule.endTime, 'HH:mm')}">2026年10月10日 18:00〜20:00</p>
 
+    <div class="field-k">作成者</div>
+    <div class="field-v" th:text="${creatorName}">作成者の名前</div>
+
     <th:block th:if="${schedule.location != null and !#strings.isEmpty(schedule.location)}">
       <div class="field-k">場所</div>
       <div class="field-v" th:text="${schedule.location}">KCS北九州</div>

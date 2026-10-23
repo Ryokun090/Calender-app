@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpSession;
  *   menuCalendars: ☰メニューの「カレンダー」欄に並べる、参加中のカレンダー一覧
  *   lastCalendarId: 最後に開いたカレンダーのid(無ければnull)
  *   navActive   : ヘッダーのメニューで強調する項目
- *                 ("home" / "calendar" / "freeslots" / "schedule-add" / "members" / "notifications" / "settings")
+ *                 ("home" / "calendar" / "freeslots" / "schedule-add" / "members" / "notifications" / "settings" / "search")
  */
 @ControllerAdvice
 public class CurrentUserAdvice {
@@ -84,6 +84,9 @@ public class CurrentUserAdvice {
         }
         if (path.startsWith("/settings")) {
             return "settings";
+        }
+        if (path.startsWith("/search")) {
+            return "search";
         }
         if (path.contains("/free-slots") || path.startsWith("/polls")) {
             return "freeslots";

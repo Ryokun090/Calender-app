@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hakkushon.calendarapp.mapper.FreeSlotMapper">
+
+    <!--
+      target   : 空きを調べたいカレンダーの参加メンバー
+      theirs   : そのメンバーが参加している全カレンダー(同じ人でも複数)
+      s        : その各カレンダーの予定
+      1つの予定は1つのカレンダーにしか属さないので、(ユーザー, 予定)の組は重複しない。
+    -->
+    <select id="findBusyIntervals" resultType="com.hakkushon.calendarapp.dto.BusyInterval">
+        SELECT target.user_id AS userId,
+               s.start_time   AS startTime,
+               s.end_time     AS endTime
+        FROM calendar_members target
+        JOIN calendar_members theirs ON theirs.user_id = target.user_id AND theirs.status = 'accepted'
+        JOIN schedules s ON s.calendar_id = theirs.calendar_id
+        WHERE target.calendar_id = #{calendarId}
+          AND target.status = 'accepted'
+          AND s.start_time &lt; #{rangeEnd}
+          AND s.end_time &gt; #{rangeStart}
+    </select>
+
+</mapper>

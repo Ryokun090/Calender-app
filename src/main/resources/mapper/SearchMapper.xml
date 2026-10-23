@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hakkushon.calendarapp.mapper.SearchMapper">
+
+    <select id="searchSchedules" resultType="com.hakkushon.calendarapp.dto.ScheduleSearchResult">
+        SELECT s.id          AS scheduleId,
+               s.title       AS title,
+               s.location    AS location,
+               s.start_time  AS startTime,
+               s.end_time    AS endTime,
+               c.id          AS calendarId,
+               c.name        AS calendarName
+        FROM schedules s
+        JOIN calendars c ON c.id = s.calendar_id
+        JOIN calendar_members me ON me.calendar_id = c.id AND me.user_id = #{userId} AND me.status = 'accepted'
+        WHERE s.title LIKE CONCAT('%', #{pattern}, '%') ESCAPE '!'
+           OR s.location LIKE CONCAT('%', #{pattern}, '%') ESCAPE '!'
+           OR s.description LIKE CONCAT('%', #{pattern}, '%') ESCAPE '!'
+        ORDER BY s.start_time DESC, s.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="searchMembers" resultType="com.hakkushon.calendarapp.dto.MemberSearchResult">
+        SELECT u.id   AS userId,
+               u.name AS name,
+               c.id   AS calendarId,
+               c.name AS calendarName
+        FROM calendar_members me
+        JOIN calendar_members other ON other.calendar_id = me.calendar_id AND other.status = 'accepted'
+        JOIN users u ON u.id = other.user_id
+        JOIN calendars c ON c.id = me.calendar_id
+        WHERE me.user_id = #{userId}
+          AND me.status = 'accepted'
+          AND u.name LIKE CONCAT('%', #{pattern}, '%') ESCAPE '!'
+        ORDER BY u.name ASC, c.is_personal DESC, c.id ASC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

@@ -21,4 +21,7 @@ public interface NotificationMapper {
     int countUnread(@Param("userId") Long userId);
 
     int markAsRead(@Param("id") Long id);
+
+    /** そのユーザーの未読をすべて既読にする。更新した件数を返す。 */
+    int markAllAsRead(@Param("userId") Long userId);
 }

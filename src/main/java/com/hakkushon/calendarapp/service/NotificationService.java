@@ -52,6 +52,12 @@ public class NotificationService {
         return notification;
     }
 
+    /** 自分の未読の通知をすべて既読にする。既読にした件数を返す。 */
+    @Transactional
+    public int markAllAsRead(Long userId) {
+        return notificationMapper.markAllAsRead(userId);
+    }
+
     /**
      * カレンダーの参加メンバー全員(excludeUserIdを除く)に同じ通知を作成する。
      * コメント投稿・招待参加・予定確定などのタイミングで呼び出す想定。

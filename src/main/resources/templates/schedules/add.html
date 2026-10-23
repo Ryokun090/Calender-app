@@ -21,6 +21,7 @@
   <div class="sm-card">
     <h1 class="sm-title">予定を追加</h1>
     <p class="sm-sub">複数の日程をまとめて登録できます</p>
+    <p class="sm-muted" style="margin:6px 0 0">※ 日をまたぐ予定(例: 23:00〜翌1:00)は、日ごとに分けて登録してください(「23:00〜23:59」と、翌日の「0:00〜1:00」)。</p>
 
     <form id="scheduleForm" style="margin-top:28px" th:action="@{/calendars/{id}/schedules(id=${calendar.id})}"
           th:object="${createScheduleForm}" method="post">

@@ -16,6 +16,7 @@
   <a class="sm-back" th:href="@{/schedules/{id}(id=${schedule.id})}">&larr; 予定に戻る</a>
   <div class="sm-card">
     <h1 class="sm-title">予定を編集</h1>
+    <p class="sm-muted" style="margin:6px 0 0">※ 日をまたぐ予定(例: 23:00〜翌1:00)は、日ごとに分けて登録してください(「23:00〜23:59」と、翌日の「0:00〜1:00」)。</p>
 
     <form style="margin-top:28px;max-width:560px" th:action="@{/schedules/{id}(id=${schedule.id})}" th:object="${editScheduleForm}" method="post">
 

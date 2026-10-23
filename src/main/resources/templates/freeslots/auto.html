@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title th:text="${calendar.name} + ' の空き日程 - SukiMatch'">空き日程</title>
+<th:block th:replace="~{fragments/base :: css}"></th:block>
+<style>
+.fs-filter { display: flex; flex-wrap: wrap; gap: 14px 16px; align-items: flex-end; }
+.fs-filter .sm-field { margin: 0; }
+.fs-filter .sm-input, .fs-filter .sm-select { height: 40px; width: auto; min-width: 0; }
+.fs-sep { padding-bottom: 10px; color: var(--sm-sub); }
+.fs-row { display: flex; align-items: center; gap: 18px; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; background: var(--sm-bg); }
+.fs-row.all { background: var(--sm-green-bg); }
+.fs-check { width: 18px; height: 18px; flex: none; accent-color: var(--sm-brand); }
+.fs-date { width: 76px; flex: none; }
+.fs-date .d { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.fs-date .w { font-size: 11px; color: var(--sm-sub); }
+.fs-main { flex: 1; min-width: 0; }
+.fs-main .time { font-size: 14px; font-weight: 700; }
+.fs-main .range, .fs-main .ng { font-size: 11px; color: var(--sm-sub); margin-top: 2px; word-break: break-word; }
+.fs-badge { flex: none; font-size: 11px; font-weight: 700; border-radius: 14px; padding: 5px 14px; background: var(--sm-orange-bg); color: var(--sm-orange); white-space: nowrap; }
+.fs-row.all .fs-badge { background: #fff; color: var(--sm-green); }
+.fs-poll { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--sm-line); }
+.fs-poll-t { font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+.fs-poll-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.fs-poll-row .sm-input { flex: 1; min-width: 200px; }
+.fs-confirm { flex: none; }
+.fs-confirm summary { list-style: none; cursor: pointer; }
+.fs-confirm summary::-webkit-details-marker { display: none; }
+.fs-confirm form { display: flex; gap: 8px; margin-top: 10px; }
+.fs-confirm .sm-input { height: 34px; width: 180px; }
+@media (max-width: 600px) {
+    .fs-sep { display: none; }
+    .fs-filter .sm-field { flex: 1 1 140px; }
+    .fs-filter .sm-input, .fs-filter .sm-select { width: 100%; }
+}
+@media (max-width: 760px) {
+    .fs-row { flex-wrap: wrap; gap: 10px 14px; }
+    .fs-main { flex-basis: calc(100% - 100px); }
+    .fs-confirm { width: 100%; }
+    .fs-confirm form { flex-wrap: wrap; }
+    .fs-confirm .sm-input { width: 100%; flex: 1; }
+}
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page">
+    <div class="sm-head">
+        <div>
+            <h1 class="sm-title lg">空き日程を探す</h1>
+            <p class="sm-sub" th:text="${calendar.name} + ' の ' + ${totalMembers} + '人の予定を見て、みんなが集まれる日を探します'">みんなが集まれる日を探します</p>
+        </div>
+        <a class="sm-btn tall" th:href="@{/calendars/{id}/free-slots(id=${calendar.id})}">○×で決める</a>
+    </div>
+
+    <div class="sm-alert ok" th:if="${message}" th:text="${message}">メッセージ</div>
+    <div class="sm-alert error" th:if="${error}" th:text="${error}">エラー</div>
+
+    <!-- 条件 -->
+    <div class="sm-card" style="padding:24px;margin-bottom:24px">
+        <form class="fs-filter" method="get" th:action="@{/calendars/{id}/free-slots/auto(id=${calendar.id})}">
+            <div class="sm-field">
+                <label class="sm-label" for="from">期間</label>
+                <input class="sm-input" id="from" type="date" name="from" th:value="${from}" required>
+            </div>
+            <span class="fs-sep">〜</span>
+            <div class="sm-field">
+                <label class="sm-label" for="to">&nbsp;</label>
+                <input class="sm-input" id="to" type="date" name="to" th:value="${to}" required>
+            </div>
+            <div class="sm-field">
+                <label class="sm-label" for="startHour">時間帯</label>
+                <select class="sm-select" id="startHour" name="startHour">
+                    <option th:each="h : ${#numbers.sequence(0, 23)}" th:value="${h}" th:text="${h} + ':00'" th:selected="${h == startHour}">9:00</option>
+                </select>
+            </div>
+            <span class="fs-sep">〜</span>
+            <div class="sm-field">
+                <label class="sm-label" for="endHour">&nbsp;</label>
+                <select class="sm-select" id="endHour" name="endHour">
+                    <option th:each="h : ${#numbers.sequence(1, 24)}" th:value="${h}" th:text="${h} + ':00'" th:selected="${h == endHour}">22:00</option>
+                </select>
+            </div>
+            <div class="sm-field">
+                <label class="sm-label" for="minutes">必要な時間</label>
+                <select class="sm-select" id="minutes" name="minutes">
+                    <option th:each="m : ${#numbers.sequence(1, 16)}" th:value="${m * 30}"
+                            th:text="${m == 1 ? '30分' : (m % 2 == 0 ? (m / 2) + '時間' : (m / 2) + '時間30分')}"
+                            th:selected="${m * 30 == minutes}">2時間</option>
+                </select>
+            </div>
+            <button type="submit" class="sm-btn dark" style="height:40px">探す</button>
+        </form>
+    </div>
+
+    <div class="sm-alert error" th:each="e : ${errors}" th:text="${e}">エラー</div>
+
+    <!-- 結果 -->
+    <div class="sm-card" style="padding:24px" th:if="${#lists.isEmpty(errors)}">
+        <h2 class="sm-h2">集まれる人が多い順</h2>
+        <p class="sm-muted" style="margin:0 0 16px">
+            各メンバーが参加している<strong>すべてのカレンダー</strong>(個人用を含む)の予定をもとに計算しています。予定の中身は表示されません。
+        </p>
+
+        <p class="sm-muted" th:if="${#lists.isEmpty(slots)}" style="margin:8px 0">
+            この条件では、1人も集まれる日がありませんでした。期間を広げるか、必要な時間を短くしてみてください。
+        </p>
+
+        <div class="fs-row" th:each="s : ${slots}" th:classappend="${s.everyone} ? 'all'">
+            <input class="fs-check" type="checkbox" name="slot" form="pollForm"
+                   th:value="${s.date} + '|' + ${s.startMin} + '|' + ${s.endMin}" aria-label="この日を投票の候補にする">
+            <div class="fs-date">
+                <div class="d" th:text="${#temporals.format(s.date, 'M/d')}">10/24</div>
+                <div class="w" th:text="'(' + ${s.weekLabel} + ')'">(土)</div>
+            </div>
+            <div class="fs-main">
+                <div class="time" th:text="${s.timeLabel}">19:00〜21:00</div>
+                <div class="range" th:if="${s.hasWiderRange}" th:text="${s.rangeLabel} + ' の間ならいつでも同じ人が集まれます'">19:00〜22:00 の間なら…</div>
+                <div class="ng" th:if="${!s.unavailableNames.isEmpty()}" th:text="'都合が合わない人: ' + ${#strings.listJoin(s.unavailableNames, '、')}">都合が合わない人: …</div>
+            </div>
+            <span class="fs-badge" th:text="${s.everyone} ? '全員OK' : (${s.availableCount} + '/' + ${s.totalCount} + '人')">3/5人</span>
+            <details class="fs-confirm">
+                <summary class="sm-btn sm">この日で決める</summary>
+                <form th:action="@{/calendars/{id}/free-slots/auto/confirm(id=${calendar.id})}" method="post">
+                    <input type="hidden" name="date" th:value="${s.date}">
+                    <input type="hidden" name="startMin" th:value="${s.startMin}">
+                    <input type="hidden" name="endMin" th:value="${s.endMin}">
+                    <input type="hidden" name="back" th:value="${backQuery}">
+                    <input class="sm-input" type="text" name="title" maxlength="100" required placeholder="予定の名前">
+                    <button type="submit" class="sm-btn dark sm">予定を作る</button>
+                </form>
+            </details>
+        </div>
+
+        <!-- チェックした日を、○×投票の候補にする -->
+        <form id="pollForm" class="fs-poll" th:if="${!slots.isEmpty()}" method="post"
+              th:action="@{/calendars/{id}/free-slots/auto/poll(id=${calendar.id})}">
+            <input type="hidden" name="back" th:value="${backQuery}">
+            <div class="fs-poll-t">候補にしたい日をチェックして、みんなに○×で投票してもらう</div>
+            <div class="fs-poll-row">
+                <input class="sm-input" type="text" name="title" maxlength="100" required placeholder="投票のタイトル(例: 忘年会)">
+                <button type="submit" class="sm-btn dark">選んだ日で投票を作る</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

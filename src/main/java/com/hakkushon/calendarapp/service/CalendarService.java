@@ -15,6 +15,7 @@ import com.hakkushon.calendarapp.domain.CalendarSummary;
 import com.hakkushon.calendarapp.domain.InviteCode;
 import com.hakkushon.calendarapp.dto.MemberInfo;
 import com.hakkushon.calendarapp.dto.MenuCalendar;
+import com.hakkushon.calendarapp.mapper.CalendarAdminMapper;
 import com.hakkushon.calendarapp.mapper.CalendarMapper;
 import com.hakkushon.calendarapp.mapper.CalendarMemberMapper;
 import com.hakkushon.calendarapp.mapper.InviteCodeAdminMapper;
@@ -36,17 +37,20 @@ public class CalendarService {
     private final InviteCodeAdminMapper inviteCodeAdminMapper;
     private final PollResponseMapper pollResponseMapper;
     private final MenuCalendarMapper menuCalendarMapper;
+    private final CalendarAdminMapper calendarAdminMapper;
     private final SecureRandom random = new SecureRandom();
 
     public CalendarService(CalendarMapper calendarMapper, CalendarMemberMapper calendarMemberMapper,
                             InviteCodeMapper inviteCodeMapper, InviteCodeAdminMapper inviteCodeAdminMapper,
-                            PollResponseMapper pollResponseMapper, MenuCalendarMapper menuCalendarMapper) {
+                            PollResponseMapper pollResponseMapper, MenuCalendarMapper menuCalendarMapper,
+                            CalendarAdminMapper calendarAdminMapper) {
         this.calendarMapper = calendarMapper;
         this.calendarMemberMapper = calendarMemberMapper;
         this.inviteCodeMapper = inviteCodeMapper;
         this.inviteCodeAdminMapper = inviteCodeAdminMapper;
         this.pollResponseMapper = pollResponseMapper;
         this.menuCalendarMapper = menuCalendarMapper;
+        this.calendarAdminMapper = calendarAdminMapper;
     }
 
     /**
@@ -111,6 +115,54 @@ public class CalendarService {
             throw new IllegalArgumentException("このユーザーは外せません");
         }
         pollResponseMapper.deleteByUserInCalendar(calendarId, targetUserId);
+    }
+
+    /**
+     * 自分からカレンダーを抜ける。オーナーと個人用カレンダーは抜けられない
+     * (オーナーは、カレンダーを削除するか、他の人にオーナーを渡す機能ができるまで抜けられない)。
+     * 抜けた人が出していた○×回答は集計に残らないよう消す。その人が作った予定・コメントは残る。
+     */
+    @Transactional
+    public void leaveCalendar(Long calendarId, Long userId) {
+        getCalendar(calendarId); // 存在しないidならここで例外
+        if (!calendarMemberMapper.isMember(calendarId, userId)) {
+            throw new AccessDeniedException("このカレンダーのメンバーではありません");
+        }
+        if (isPersonalCalendar(calendarId, userId)) {
+            throw new IllegalArgumentException("個人用のカレンダーからは抜けられません");
+        }
+        if (calendarMemberMapper.isOwner(calendarId, userId)) {
+            throw new IllegalArgumentException("オーナーはカレンダーから抜けられません。不要なら、カレンダーを削除してください");
+        }
+        int deleted = calendarMemberMapper.deleteMember(calendarId, userId);
+        if (deleted == 0) {
+            throw new IllegalStateException("カレンダーから抜けられませんでした");
+        }
+        pollResponseMapper.deleteByUserInCalendar(calendarId, userId);
+    }
+
+    /**
+     * 共有カレンダーを削除する。オーナーのみ。個人用カレンダーは削除できない。
+     * 中の予定・コメント・空き日程調整・メンバー・招待コードもすべて消え、元に戻せない。
+     */
+    @Transactional
+    public void deleteCalendar(Long calendarId, Long userId) {
+        getCalendar(calendarId);
+        if (!calendarMemberMapper.isOwner(calendarId, userId)) {
+            throw new AccessDeniedException("カレンダーを削除できるのはオーナーのみです");
+        }
+        if (isPersonalCalendar(calendarId, userId)) {
+            throw new IllegalArgumentException("個人用のカレンダーは削除できません");
+        }
+        // SQL側でも is_personal = FALSE を条件にしているので、万一ここで個人用が来ても消えない
+        if (calendarAdminMapper.deleteSharedCalendar(calendarId) != 1) {
+            throw new IllegalStateException("カレンダーを削除できませんでした");
+        }
+    }
+
+    private boolean isPersonalCalendar(Long calendarId, Long userId) {
+        return menuCalendarMapper.findByUserId(userId).stream()
+                .anyMatch(c -> calendarId.equals(c.getId()) && c.isPersonal());
     }
 
     /**

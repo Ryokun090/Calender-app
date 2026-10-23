@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import com.hakkushon.calendarapp.common.LoginUser;
 import com.hakkushon.calendarapp.domain.Notification;
@@ -32,6 +33,13 @@ public class NotificationController {
         if (notification.getScheduleId() != null) {
             return "redirect:/schedules/" + notification.getScheduleId();
         }
+        return "redirect:/notifications";
+    }
+
+    /** 「すべて既読にする」ボタン。 */
+    @PostMapping("/notifications/read-all")
+    public String readAll(@AuthenticationPrincipal LoginUser loginUser) {
+        notificationService.markAllAsRead(loginUser.getId());
         return "redirect:/notifications";
     }
 }

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +40,11 @@ import jakarta.validation.Valid;
 
 @Controller
 public class CalendarController {
+
+    /** 作成者ごとの予定の色(メンバーの並び順に割り当て、足りなければ最初に戻る)。 */
+    private static final String[] MEMBER_COLORS = {
+            "#3885f5", "#2ea36e", "#eb8c2e", "#7a63e0", "#d64047", "#0e9aa7", "#c2549b", "#7a6a4f"
+    };
 
     private final CalendarService calendarService;
     private final CalendarAuthService calendarAuthService;
@@ -149,6 +155,53 @@ public class CalendarController {
         return "redirect:/calendars/" + id + "/members";
     }
 
+    /** 自分からカレンダーを抜ける(オーナー・個人用は不可)。 */
+    @PostMapping("/calendars/{id}/leave")
+    public String leave(@PathVariable Long id,
+                         @AuthenticationPrincipal LoginUser loginUser,
+                         HttpSession session,
+                         RedirectAttributes redirectAttributes) {
+        String name = calendarService.getCalendar(id).getName();
+        try {
+            calendarService.leaveCalendar(id, loginUser.getId());
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+            return "redirect:/calendars/" + id + "/members";
+        }
+        forgetLastCalendar(session, id);
+        return redirectToLanding(loginUser.getId(), "「" + name + "」から抜けました", redirectAttributes);
+    }
+
+    /** 共有カレンダーを削除する(オーナーのみ)。 */
+    @PostMapping("/calendars/{id}/delete")
+    public String deleteCalendar(@PathVariable Long id,
+                                  @AuthenticationPrincipal LoginUser loginUser,
+                                  HttpSession session,
+                                  RedirectAttributes redirectAttributes) {
+        String name = calendarService.getCalendar(id).getName();
+        try {
+            calendarService.deleteCalendar(id, loginUser.getId());
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+            return "redirect:/calendars/" + id + "/members";
+        }
+        forgetLastCalendar(session, id);
+        return redirectToLanding(loginUser.getId(), "「" + name + "」を削除しました", redirectAttributes);
+    }
+
+    private void forgetLastCalendar(HttpSession session, Long calendarId) {
+        if (calendarId.equals(session.getAttribute(CurrentUserAdvice.LAST_CALENDAR_ID))) {
+            session.removeAttribute(CurrentUserAdvice.LAST_CALENDAR_ID);
+        }
+    }
+
+    /** 抜けた・削除したあとは、最初のカレンダー(個人用)へ。メッセージはその画面に出す。 */
+    private String redirectToLanding(Long userId, String message, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("message", message);
+        Long landing = calendarService.findLandingCalendarId(userId);
+        return landing != null ? "redirect:/calendars/" + landing : "redirect:/calendars/add";
+    }
+
     @GetMapping("/calendars/{id}")
     public String detail(@PathVariable Long id,
                           @RequestParam(required = false) Integer year,
@@ -203,6 +256,15 @@ public class CalendarController {
                 .findFirst()
                 .orElse("#1f73f2");
         model.addAttribute("calendarColor", calendarColor);
+
+        // 作成者ごとの色。メンバー一覧(オーナーが先頭、あとは参加順)の順に色を割り当てる
+        List<MemberInfo> members = calendarService.listMembers(id, loginUser.getId());
+        Map<Long, String> userColors = new LinkedHashMap<>();
+        for (int i = 0; i < members.size(); i++) {
+            userColors.put(members.get(i).getUserId(), MEMBER_COLORS[i % MEMBER_COLORS.length]);
+        }
+        model.addAttribute("members", members);
+        model.addAttribute("userColors", userColors);
         model.addAttribute("calendar", calendar);
         model.addAttribute("memberCount", memberCount);
         model.addAttribute("yearMonth", yearMonth);
