@@ -22,7 +22,10 @@
             <h1 class="sm-title lg">空き日程を探す</h1>
             <p class="sm-sub" th:text="${calendar.name} + ' のメンバーに、候補日程を○×で答えてもらいます'">メンバーに候補日程を○×で答えてもらいます</p>
         </div>
-        <a class="sm-btn dark tall" th:href="@{/calendars/{id}/free-slots/add(id=${calendar.id})}">＋ 新しい候補を作る</a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a class="sm-btn tall" th:href="@{/calendars/{id}/free-slots/auto(id=${calendar.id})}">自動で探す</a>
+            <a class="sm-btn dark tall" th:href="@{/calendars/{id}/free-slots/add(id=${calendar.id})}">＋ 新しい候補を作る</a>
+        </div>
     </div>
 
     <div class="sm-card" style="padding:24px">

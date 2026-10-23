@@ -11,6 +11,10 @@
         .role { font-size: 11px; color: var(--sm-sub); min-width: 56px; text-align: right; }
         .me { font-size: 10px; font-weight: 500; color: var(--sm-blue); background: var(--sm-blue-bg); border-radius: 8px; padding: 1px 8px; margin-left: 6px; }
         .joined { font-size: 10px; color: var(--sm-sub); }
+        .danger-zone { display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid var(--sm-line); border-radius: 10px; padding: 16px 20px; }
+        .danger-zone .dz-t { font-size: 13px; font-weight: 700; }
+        .danger-zone .dz-d { font-size: 11px; color: var(--sm-sub); margin-top: 4px; line-height: 1.7; }
+        @media (max-width: 600px) { .danger-zone { flex-direction: column; align-items: stretch; } }
     </style>
 </head>
 <body>
@@ -67,6 +71,36 @@
             </form>
             </div>
         </div>
+
+        <!-- カレンダーの退出・削除(共有カレンダーのときだけ) -->
+        <th:block th:if="${!calendar.personal}">
+            <hr class="sm-hr">
+            <h2 class="sm-h3">このカレンダーについて</h2>
+
+            <div th:if="${!isOwner}" class="danger-zone">
+                <div>
+                    <div class="dz-t">カレンダーから抜ける</div>
+                    <div class="dz-d">抜けると、このカレンダーが見られなくなります。あなたの○×回答は消え、作った予定やコメントは残ります。もう一度入るには、招待コードが必要です。</div>
+                </div>
+                <form th:action="@{/calendars/{id}/leave(id=${calendar.id})}" method="post" style="margin:0"
+                      th:data-name="${calendar.name}"
+                      onsubmit="return confirm('「' + this.dataset.name + '」から抜けますか？');">
+                    <button type="submit" class="sm-btn danger">抜ける</button>
+                </form>
+            </div>
+
+            <div th:if="${isOwner}" class="danger-zone">
+                <div>
+                    <div class="dz-t">カレンダーを削除する</div>
+                    <div class="dz-d">予定・コメント・空き日程の調整・メンバー・招待コードがすべて消え、<strong>元に戻せません</strong>。オーナーは抜けることができないため、不要になったらここから削除してください。</div>
+                </div>
+                <form th:action="@{/calendars/{id}/delete(id=${calendar.id})}" method="post" style="margin:0"
+                      th:data-name="${calendar.name}"
+                      onsubmit="return confirm('「' + this.dataset.name + '」を削除します。中の予定やコメントもすべて消え、元に戻せません。本当に削除しますか？');">
+                    <button type="submit" class="sm-btn danger">削除する</button>
+                </form>
+            </div>
+        </th:block>
     </div>
 </div>
 </body>

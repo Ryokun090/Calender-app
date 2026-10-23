@@ -19,4 +19,7 @@ public interface UserMapper {
     void updateTwoFaEnabled(@Param("id") Long id, @Param("enabled") boolean enabled);
 
     void updateName(@Param("id") Long id, @Param("name") String name);
+
+    /** パスワード再設定用。passwordHash はハッシュ化済みの値を渡すこと。 */
+    void updatePasswordHash(@Param("id") Long id, @Param("passwordHash") String passwordHash);
 }

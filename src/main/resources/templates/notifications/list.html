@@ -23,13 +23,16 @@
 <div class="sm-page">
     <div class="sm-head">
         <h1 class="sm-title lg">通知</h1>
+        <form th:if="${unreadCount != null and unreadCount > 0}" th:action="@{/notifications/read-all}" method="post" style="margin:0">
+            <button type="submit" class="sm-btn">すべて既読にする</button>
+        </form>
     </div>
 
     <div class="sm-card" style="padding:24px">
         <p class="sm-muted" th:if="${#lists.isEmpty(notifications)}" style="margin:8px 0">通知はありません。</p>
 
         <a th:each="n : ${notifications}" class="notif"
-           th:classappend="${(n.type == 'poll_confirmed' ? 'green' : (n.type == 'invite_joined' or n.type == 'reminder' ? 'purple' : '')) + (n.read ? ' read' : '')}"
+           th:classappend="${(n.type == 'poll_confirmed' ? 'green' : (n.type == 'invite_joined' or n.type == 'reminder' ? 'purple' : (n.type == 'schedule_updated' or n.type == 'schedule_deleted' ? 'orange' : ''))) + (n.read ? ' read' : '')}"
            th:href="@{/notifications/{id}/open(id=${n.id})}">
             <span class="dot" th:if="${!n.read}"></span>
             <div class="top">

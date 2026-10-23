@@ -110,15 +110,16 @@ html { padding-top: 72px; }
 
     <nav class="uh-nav">
         <a href="#" th:href="${cid != null} ? @{/calendars/{id}(id=${cid})} : @{/calendars}" th:classappend="${navActive == 'calendar' or navActive == 'home' or navActive == 'members' or navActive == 'schedule-add'} ? 'active'">カレンダー</a>
-        <a href="#" th:if="${cid != null}" th:href="@{/calendars/{id}/free-slots(id=${cid})}"
+        <a href="#" th:if="${cid != null}" th:href="@{/calendars/{id}/free-slots/auto(id=${cid})}"
            th:classappend="${navActive == 'freeslots'} ? 'active'">空き日程</a>
         <a href="#" th:href="@{/notifications}" th:classappend="${navActive == 'notifications'} ? 'active'">通知</a>
     </nav>
 
-    <div class="uh-search" th:unless="${navActive == 'home'}" title="検索は準備中です">
+    <form class="uh-search" th:unless="${navActive == 'home'}" method="get" th:action="@{/search}" role="search">
         <span aria-hidden="true">⌕</span>
-        <input type="text" placeholder="予定・メンバーを検索" disabled>
-    </div>
+        <input type="text" name="q" maxlength="50" placeholder="予定・メンバーを検索" aria-label="検索"
+               th:value="${searchQuery}">
+    </form>
 
     <span class="uh-spacer"></span>
 
@@ -151,7 +152,7 @@ html { padding-top: 72px; }
                 <span class="ico">▣</span>カレンダー
             </a>
 
-            <a class="uh-item" href="#" th:if="${cid != null}" th:href="@{/calendars/{id}/free-slots(id=${cid})}" th:classappend="${navActive == 'freeslots'} ? 'active'">
+            <a class="uh-item" href="#" th:if="${cid != null}" th:href="@{/calendars/{id}/free-slots/auto(id=${cid})}" th:classappend="${navActive == 'freeslots'} ? 'active'">
                 <span class="ico">◷</span>空き日程
             </a>
 
@@ -166,6 +167,10 @@ html { padding-top: 72px; }
             <a class="uh-item" href="#" th:href="@{/notifications}" th:classappend="${navActive == 'notifications'} ? 'active'">
                 <span class="ico">♧</span>通知
                 <span class="uh-badge" th:if="${unreadCount != null and unreadCount > 0}" th:text="${unreadCount > 99} ? '99+' : ${unreadCount}">3</span>
+            </a>
+
+            <a class="uh-item" href="#" th:href="@{/search}" th:classappend="${navActive == 'search'} ? 'active'">
+                <span class="ico">⌕</span>検索
             </a>
         </nav>
 

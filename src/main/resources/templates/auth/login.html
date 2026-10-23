@@ -14,6 +14,7 @@
         <p class="sm-alert error" th:if="${param.error}">メールアドレスまたはパスワードが違います</p>
         <p class="sm-alert ok" th:if="${param.logout}">ログアウトしました</p>
         <p class="sm-alert ok" th:if="${param.registered}">登録が完了しました。ログインしてください</p>
+        <p class="sm-alert ok" th:if="${param.reset}">パスワードを変更しました。新しいパスワードでログインしてください</p>
 
         <form th:action="@{/auth/login}" method="post">
             <div class="sm-field">
@@ -23,6 +24,9 @@
             <div class="sm-field">
                 <label class="sm-label" for="password">パスワード</label>
                 <input class="sm-input" id="password" type="password" name="password" required placeholder="パスワードを入力">
+            </div>
+            <div style="text-align:right;margin-top:-6px">
+                <a class="sm-link" th:href="@{/auth/password/forgot}">パスワードを忘れた方</a>
             </div>
             <div style="text-align:center;margin-top:24px">
                 <button type="submit" class="sm-btn dark tall" style="min-width:156px">ログイン</button>

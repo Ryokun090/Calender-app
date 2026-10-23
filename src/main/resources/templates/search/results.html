@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>検索 - SukiMatch</title>
+<th:block th:replace="~{fragments/base :: css}"></th:block>
+<style>
+.sr-form { display: flex; gap: 10px; margin-bottom: 24px; }
+.sr-form .sm-input { flex: 1; }
+.sr-item { display: flex; align-items: center; gap: 14px; background: var(--sm-bg); border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; }
+.sr-item:hover { filter: brightness(.97); }
+.sr-item .grow { flex: 1; min-width: 0; }
+.sr-item .t { font-size: 13px; font-weight: 700; word-break: break-word; }
+.sr-item .m { font-size: 11px; color: var(--sm-sub); margin-top: 2px; word-break: break-word; }
+.sr-item .cal { flex: none; font-size: 11px; font-weight: 500; color: var(--sm-blue); background: var(--sm-blue-bg); border-radius: 12px; padding: 3px 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page narrow">
+    <div class="sm-head" style="margin-bottom:16px">
+        <h1 class="sm-title lg">検索</h1>
+    </div>
+
+    <form class="sr-form" method="get" th:action="@{/search}">
+        <input class="sm-input" type="text" name="q" maxlength="50" th:value="${searchQuery}" placeholder="予定の名前・場所・メンバーの名前" autofocus>
+        <button type="submit" class="sm-btn dark">検索</button>
+    </form>
+
+    <p class="sm-muted" th:unless="${searched}">
+        参加しているカレンダーの中から、予定(タイトル・場所・説明)とメンバー(名前)を探します。
+    </p>
+
+    <th:block th:if="${searched}">
+        <div class="sm-card" style="padding:24px;margin-bottom:24px">
+            <h2 class="sm-h2" th:text="'予定(' + ${#lists.size(scheduleResults)} + '件)'">予定</h2>
+            <p class="sm-muted" th:if="${#lists.isEmpty(scheduleResults)}" style="margin:0">見つかりませんでした。</p>
+            <a class="sr-item" th:each="r : ${scheduleResults}" th:href="@{/schedules/{id}(id=${r.scheduleId})}">
+                <div class="grow">
+                    <div class="t" th:text="${r.title}">タイトル</div>
+                    <div class="m">
+                        <span th:text="${#temporals.format(r.startTime, 'yyyy/M/d HH:mm')} + '〜' + ${#temporals.format(r.endTime, 'HH:mm')}">2026/10/10 18:00〜20:00</span>
+                        <span th:if="${r.location != null and !#strings.isEmpty(r.location)}" th:text="' ／ ' + ${r.location}">／ 場所</span>
+                    </div>
+                </div>
+                <span class="cal" th:text="${r.calendarName}">カレンダー</span>
+            </a>
+            <p class="sm-muted" th:if="${#lists.size(scheduleResults) >= limit}" style="margin:8px 0 0" th:text="'新しい順に' + ${limit} + '件まで表示しています。言葉を絞り込んでください。'"></p>
+        </div>
+
+        <div class="sm-card" style="padding:24px">
+            <h2 class="sm-h2" th:text="'メンバー(' + ${#lists.size(memberResults)} + '件)'">メンバー</h2>
+            <p class="sm-muted" th:if="${#lists.isEmpty(memberResults)}" style="margin:0">見つかりませんでした。</p>
+            <a class="sr-item" th:each="r : ${memberResults}" th:href="@{/calendars/{id}/members(id=${r.calendarId})}">
+                <div class="sm-avatar" th:text="${#strings.substring(r.name, 0, 1)}">大</div>
+                <div class="grow"><div class="t" th:text="${r.name}">名前</div></div>
+                <span class="cal" th:text="${r.calendarName}">カレンダー</span>
+            </a>
+        </div>
+    </th:block>
+</div>
+</body>
+</html>

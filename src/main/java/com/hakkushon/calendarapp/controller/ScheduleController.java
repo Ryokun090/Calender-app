@@ -25,6 +25,7 @@ import com.hakkushon.calendarapp.dto.CreateScheduleForm;
 import com.hakkushon.calendarapp.dto.EditScheduleForm;
 import com.hakkushon.calendarapp.dto.ScheduleEntry;
 import com.hakkushon.calendarapp.mapper.CalendarMapper;
+import com.hakkushon.calendarapp.mapper.UserMapper;
 import com.hakkushon.calendarapp.service.CommentService;
 import com.hakkushon.calendarapp.service.ScheduleService;
 
@@ -39,9 +40,11 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final CalendarMapper calendarMapper;
     private final CommentService commentService;
+    private final UserMapper userMapper;
 
     public ScheduleController(ScheduleService scheduleService, CalendarMapper calendarMapper,
-                               CommentService commentService) {
+                               CommentService commentService, UserMapper userMapper) {
+        this.userMapper = userMapper;
         this.scheduleService = scheduleService;
         this.calendarMapper = calendarMapper;
         this.commentService = commentService;
@@ -104,6 +107,9 @@ public class ScheduleController {
                           Model model) {
         Schedule schedule = scheduleService.getScheduleForMember(id, loginUser.getId());
         model.addAttribute("schedule", schedule);
+        // 作成者の名前(退会などで見つからないときは「不明」)
+        model.addAttribute("creatorName", userMapper.findById(schedule.getCreatedBy())
+                .map(u -> u.getName()).orElse("不明"));
         model.addAttribute("comments", commentService.listForSchedule(id, loginUser.getId()));
         model.addAttribute("createCommentForm", new CreateCommentForm());
         return "schedules/detail";
