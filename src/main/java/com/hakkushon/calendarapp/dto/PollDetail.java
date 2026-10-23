@@ -10,13 +10,13 @@ public class PollDetail {
     private final SchedulePoll poll;
     private final List<CandidateSummary> candidates;
     private final int totalMembers;
-    private final boolean owner;
+    private final boolean canConfirm;
 
-    public PollDetail(SchedulePoll poll, List<CandidateSummary> candidates, int totalMembers, boolean owner) {
+    public PollDetail(SchedulePoll poll, List<CandidateSummary> candidates, int totalMembers, boolean canConfirm) {
         this.poll = poll;
         this.candidates = candidates;
         this.totalMembers = totalMembers;
-        this.owner = owner;
+        this.canConfirm = canConfirm;
     }
 
     public SchedulePoll getPoll() {
@@ -31,7 +31,8 @@ public class PollDetail {
         return totalMembers;
     }
 
-    public boolean isOwner() {
-        return owner;
+    /** 確定ボタンを出してよいか(作成者またはカレンダーのオーナー)。 */
+    public boolean isCanConfirm() {
+        return canConfirm;
     }
 }

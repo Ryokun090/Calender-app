@@ -2,25 +2,26 @@
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>2段階認証の設定 - 共有カレンダーアプリ</title>
+    <title>2段階認証の設定 - SukiMatch</title>
+    <th:block th:replace="~{fragments/base :: css}"></th:block>
 </head>
-<body>
-<div style="max-width:360px;margin:60px auto;padding:24px;border:1px solid #ddd;border-radius:12px;">
-    <h1 style="text-align:center;font-size:16px;">登録ありがとうございます</h1>
-    <p style="text-align:center;font-size:13px;color:#555;line-height:1.6;">
+<body class="sm-auth">
+<div class="sm-auth-wrap" style="padding-top:54px">
+    <h1 class="sm-brand" style="font-size:28px">SukiMatch</h1>
+    <h2 class="sm-auth-title">登録ありがとうございます</h2>
+    <p class="sm-brand-sub" style="font-size:12px;line-height:1.8;margin-top:16px">
         2段階認証を設定すると、ログイン時にメールで届く認証コードの入力が必要になり、
         より安全にアカウントを利用できます。あとから設定で変更することもできます。
     </p>
 
-    <form th:action="@{/auth/signup/2fa-prompt/enable}" method="post">
-        <button type="submit" style="width:100%;margin-top:8px;">2段階認証を設定する</button>
-    </form>
-
-    <form th:action="@{/auth/signup/2fa-prompt/skip}" method="post" style="margin-top:8px;">
-        <button type="submit" style="width:100%;background:none;border:1px solid #ccc;">
-            あとで設定する
-        </button>
-    </form>
+    <div style="margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:12px">
+        <form th:action="@{/auth/signup/2fa-prompt/enable}" method="post" style="margin:0">
+            <button type="submit" class="sm-btn dark tall" style="min-width:220px">2段階認証を設定する</button>
+        </form>
+        <form th:action="@{/auth/signup/2fa-prompt/skip}" method="post" style="margin:0">
+            <button type="submit" class="sm-btn tall" style="min-width:220px">あとで設定する</button>
+        </form>
+    </div>
 </div>
 </body>
 </html>

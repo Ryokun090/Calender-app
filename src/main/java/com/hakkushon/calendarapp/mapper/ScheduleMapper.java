@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.hakkushon.calendarapp.domain.Schedule;
+import com.hakkushon.calendarapp.dto.ScheduleTemplate;
 
 /**
  * schedulesテーブルのマッパー。
@@ -31,4 +32,12 @@ public interface ScheduleMapper {
     int update(Schedule schedule);
 
     int delete(@Param("id") Long id);
+
+    /**
+     * 「過去の予定から選ぶ」用。指定カレンダーの予定から、タイトル・場所・説明が同じものを1つにまとめ、
+     * 直近に登録された順に最大limit件返す。
+     */
+    List<ScheduleTemplate> findRecentTemplates(
+            @Param("calendarId") Long calendarId,
+            @Param("limit") int limit);
 }

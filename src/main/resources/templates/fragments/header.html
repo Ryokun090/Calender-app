@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  共通ヘッダー + ハンバーガーメニュー(Figma「SukiMatch Header / Master」「13_ハンバーガーメニュー_開」を実装したもの)。
+  使い方: 各画面の<body>の直後に次の1行を入れる。
+    <div th:replace="~{fragments/header :: header}"></div>
+  カレンダーIDは、画面のモデルにある calendar / poll / schedule から自動で取る。
+-->
+<header th:fragment="header" th:if="${loginEmail != null}"
+        th:with="cid=${calendar != null ? calendar.id : (poll != null ? poll.calendarId : (schedule != null ? schedule.calendarId : lastCalendarId))}"
+        class="uh">
+<style>
+html { padding-top: 72px; }
+.uh { position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 1000; box-sizing: border-box;
+      background: #ffffff; border-bottom: 1px solid #dee3eb; display: flex; align-items: center; gap: 12px; padding: 0 24px;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+      color: #14171c; }
+.uh * { box-sizing: border-box; }
+.uh a { color: inherit; text-decoration: none; }
+.uh-burger { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font: inherit; font-size: 18px; font-weight: 500;
+             border: none; background: none; color: #14171c; border-radius: 8px; cursor: pointer; padding: 0; }
+.uh-burger:hover, .uh.open .uh-burger { background: #f1f4f9; }
+.uh-logo { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; white-space: nowrap; }
+.uh-logo .match { color: #4f7af5; }
+.uh-search { margin-left: 24px; flex: 0 1 330px; height: 40px; display: flex; align-items: center; gap: 8px;
+             background: #f8fafc; border: 1px solid #dee3eb; border-radius: 20px; padding: 0 16px; color: #616975; font-size: 12px; }
+.uh-search input { border: none; background: transparent; outline: none; font: inherit; width: 100%; color: inherit; }
+.uh-sep { width: 1px; height: 36px; background: #dee3eb; margin: 0 8px 0 6px; }
+.uh-nav { display: flex; gap: 4px; }
+.uh-nav a { font-size: 13px; font-weight: 500; color: #616975; padding: 8px 12px; border-radius: 8px; white-space: nowrap; }
+.uh-nav a:hover { background: #f1f4f9; }
+.uh-nav a.active { color: #14171c; }
+.uh-nav a.muted { opacity: .5; }
+.uh-spacer { flex: 1; }
+
+/* アカウント(右上) */
+.uh details { position: relative; }
+.uh summary { list-style: none; cursor: pointer; }
+.uh summary::-webkit-details-marker { display: none; }
+.uh-account summary { display: flex; align-items: center; gap: 10px; padding: 4px 6px; border-radius: 24px; }
+.uh-account summary:hover, .uh-account[open] summary { background: #f1f4f9; }
+.uh-avatar { width: 40px; height: 40px; border-radius: 20px; background: #e8f2ff; color: #3885f5; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.uh-name { font-size: 12px; font-weight: 500; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uh-panel { position: absolute; top: calc(100% + 8px); right: 0; background: #ffffff; border: 1px solid #dee3eb; border-radius: 12px; box-shadow: 0 8px 24px rgba(20,23,28,.10); padding: 6px; min-width: 200px; display: flex; flex-direction: column; }
+.uh-panel button { display: block; width: 100%; text-align: left; font: inherit; font-size: 13px; color: #14171c; background: none; border: none; padding: 9px 12px; border-radius: 8px; cursor: pointer; }
+.uh-panel button:hover { background: #f1f4f9; }
+.uh-panel .who { font-size: 11px; color: #616975; padding: 8px 12px 6px; word-break: break-all; }
+.uh-panel a { display: block; font-size: 13px; color: #14171c; padding: 9px 12px; border-radius: 8px; }
+.uh-panel a:hover { background: #f1f4f9; }
+.uh-panel hr { border: none; border-top: 1px solid #dee3eb; margin: 4px 0; width: 100%; }
+
+/* ハンバーガーメニュー(左のドロワー) */
+.uh-dim { position: fixed; top: 72px; left: 0; right: 0; bottom: 0; background: rgba(26,33,46,.38); opacity: 0; visibility: hidden; transition: opacity .18s ease; z-index: 1; }
+.uh-drawer { position: fixed; top: 72px; left: 0; bottom: 0; width: 380px; max-width: 88vw; background: #ffffff; z-index: 2;
+             transform: translateX(-100%); visibility: hidden; transition: transform .18s ease, visibility .18s; overflow-y: auto; display: flex; flex-direction: column; }
+.uh.open .uh-dim { opacity: 1; visibility: visible; }
+.uh.open .uh-drawer { transform: translateX(0); visibility: visible; }
+.uh-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 28px 18px 18px 28px; }
+.uh-drawer-title { font-size: 18px; font-weight: 700; color: #1a212e; line-height: 26px; }
+.uh-close { border: none; background: none; font: inherit; font-size: 20px; line-height: 28px; color: #616e80; width: 28px; height: 28px; cursor: pointer; padding: 0; border-radius: 6px; }
+.uh-close:hover { background: #f1f4f9; }
+.uh-items { padding: 0 16px; display: flex; flex-direction: column; gap: 12px; }
+.uh-item { display: flex; align-items: center; height: 46px; padding: 0 16px 0 14px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1a212e; }
+.uh-item:hover { background: #f4f7fb; }
+.uh-item .ico { width: 24px; text-align: center; font-size: 16px; color: #616e80; margin-right: 12px; font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", Inter, sans-serif; }
+.uh-item.active { background: #e5f2ff; color: #1f73f2; font-weight: 700; }
+.uh-item.active .ico { color: #1f73f2; }
+.uh-item.muted { opacity: .45; cursor: default; }
+.uh-item.muted:hover { background: none; }
+.uh-badge { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #eb5966; color: #ffffff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.uh-cals { padding: 28px 16px 0; }
+.uh-cals-label { font-size: 11px; font-weight: 700; color: #616e80; line-height: 20px; padding: 0 12px; margin-bottom: 6px; }
+.uh-cal { display: flex; align-items: center; height: 34px; padding: 0 12px; border-radius: 6px; font-size: 12px; color: #1a212e; }
+.uh-cal:hover { background: #f4f7fb; }
+.uh-cal .dot { width: 28px; font-size: 11px; font-weight: 500; }
+.uh-cal .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uh-cal.current { background: #e5f2ff; color: #1f73f2; font-weight: 700; }
+.uh-cal.add { color: #3885f5; font-weight: 500; }
+.uh-cal.add .dot { color: #3885f5; }
+.uh-account-block { padding: 36px 28px 0; }
+.uh-account-label { font-size: 11px; font-weight: 700; color: #616e80; line-height: 20px; }
+.uh-account-name { margin-top: 18px; font-size: 14px; font-weight: 700; color: #1a212e; line-height: 22px; word-break: break-all; }
+.uh-drawer-foot { margin-top: auto; padding: 0 16px 24px; }
+.uh-drawer-foot hr { border: none; border-top: 1px solid #dbe3ed; margin: 28px 0 14px; }
+.uh-drawer-foot button { display: flex; align-items: center; width: 100%; height: 46px; padding: 0 16px 0 14px; border: none; background: none; border-radius: 8px;
+                         font: inherit; font-size: 14px; font-weight: 500; color: #1a212e; cursor: pointer; text-align: left; }
+.uh-drawer-foot button:hover { background: #f4f7fb; }
+.uh-drawer-foot .ico { width: 24px; text-align: center; font-size: 16px; color: #616e80; margin-right: 12px; font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", Inter, sans-serif; }
+
+@media (max-width: 1000px) { .uh-search { display: none; } }
+@media (max-width: 760px)  { .uh { padding: 0 12px; gap: 8px; } .uh-nav, .uh-sep, .uh-name { display: none; } }
+</style>
+
+    <button type="button" class="uh-burger" id="uhBurger" aria-label="メニューを開く" aria-expanded="false">☰</button>
+
+    <a class="uh-logo" href="#" th:href="${cid != null} ? @{/calendars/{id}(id=${cid})} : @{/calendars}" aria-label="SukiMatch">
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+            <rect x="2" y="4" width="6" height="20" rx="3" fill="#14171c"/>
+            <rect x="2" y="4" width="10" height="6" rx="3" fill="#14171c"/>
+            <rect x="2" y="18" width="10" height="6" rx="3" fill="#14171c"/>
+            <rect x="20" y="4" width="6" height="20" rx="3" fill="#4f7af5"/>
+            <rect x="16" y="4" width="10" height="6" rx="3" fill="#4f7af5"/>
+            <rect x="16" y="18" width="10" height="6" rx="3" fill="#4f7af5"/>
+        </svg>
+        <span>Suki<span class="match">Match</span></span>
+    </a>
+
+    <span class="uh-sep"></span>
+
+    <nav class="uh-nav">
+        <a href="#" th:href="${cid != null} ? @{/calendars/{id}(id=${cid})} : @{/calendars}" th:classappend="${navActive == 'calendar' or navActive == 'home' or navActive == 'members' or navActive == 'schedule-add'} ? 'active'">カレンダー</a>
+        <a href="#" th:if="${cid != null}" th:href="@{/calendars/{id}/free-slots(id=${cid})}"
+           th:classappend="${navActive == 'freeslots'} ? 'active'">空き日程</a>
+        <a href="#" th:href="@{/notifications}" th:classappend="${navActive == 'notifications'} ? 'active'">通知</a>
+    </nav>
+
+    <div class="uh-search" th:unless="${navActive == 'home'}" title="検索は準備中です">
+        <span aria-hidden="true">⌕</span>
+        <input type="text" placeholder="予定・メンバーを検索" disabled>
+    </div>
+
+    <span class="uh-spacer"></span>
+
+    <details class="uh-account">
+        <summary>
+            <span class="uh-avatar" th:text="${#strings.toUpperCase(#strings.substring(loginEmail, 0, 1))}">U</span>
+            <span class="uh-name" th:text="${loginEmail}">user@example.com</span>
+        </summary>
+        <div class="uh-panel">
+            <div class="who">ログイン中<br><strong th:text="${loginEmail}">user@example.com</strong></div>
+            <hr>
+            <a href="#" th:href="@{/settings}">設定</a>
+            <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                <button type="submit">ログアウト</button>
+            </form>
+        </div>
+    </details>
+
+    <!-- ここから左のドロワー(ハンバーガーメニュー) -->
+    <div class="uh-dim" id="uhDim"></div>
+    <aside class="uh-drawer" id="uhDrawer" aria-label="メニュー">
+        <div class="uh-drawer-head">
+            <span class="uh-drawer-title">SukiMatch</span>
+            <button type="button" class="uh-close" id="uhClose" aria-label="メニューを閉じる">×</button>
+        </div>
+
+        <nav class="uh-items">
+            <a class="uh-item" href="#" th:href="${cid != null} ? @{/calendars/{id}(id=${cid})} : @{/calendars}"
+               th:classappend="${navActive == 'calendar'} ? 'active'">
+                <span class="ico">▣</span>カレンダー
+            </a>
+
+            <a class="uh-item" href="#" th:if="${cid != null}" th:href="@{/calendars/{id}/free-slots(id=${cid})}" th:classappend="${navActive == 'freeslots'} ? 'active'">
+                <span class="ico">◷</span>空き日程
+            </a>
+
+            <a class="uh-item" href="#" th:if="${cid != null}" th:href="@{/calendars/{id}/schedules/add(id=${cid})}" th:classappend="${navActive == 'schedule-add'} ? 'active'">
+                <span class="ico">＋</span>一括予定登録
+            </a>
+
+            <a class="uh-item" href="#" th:if="${cid != null}" th:href="@{/calendars/{id}/members(id=${cid})}" th:classappend="${navActive == 'members'} ? 'active'">
+                <span class="ico">♙</span>メンバー
+            </a>
+
+            <a class="uh-item" href="#" th:href="@{/notifications}" th:classappend="${navActive == 'notifications'} ? 'active'">
+                <span class="ico">♧</span>通知
+                <span class="uh-badge" th:if="${unreadCount != null and unreadCount > 0}" th:text="${unreadCount > 99} ? '99+' : ${unreadCount}">3</span>
+            </a>
+        </nav>
+
+        <!-- カレンダーの切り替え・追加(Figma 14_ハンバーガーメニュー_カレンダー展開) -->
+        <div class="uh-cals">
+            <div class="uh-cals-label">カレンダー</div>
+            <a class="uh-cal" href="#" th:each="c : ${menuCalendars}" th:href="@{/calendars/{id}(id=${c.id})}"
+               th:classappend="${cid != null and cid == c.id} ? 'current'">
+                <span class="dot" th:style="'color:' + ${c.color}">●</span>
+                <span class="name" th:text="${c.name}">自分の予定</span>
+            </a>
+            <a class="uh-cal add" href="#" th:href="@{/calendars/add}" th:classappend="${navActive == 'home'} ? 'current'">
+                <span class="dot">＋</span>
+                <span class="name">カレンダーを追加</span>
+            </a>
+        </div>
+
+        <div class="uh-account-block">
+            <div class="uh-account-label">アカウント</div>
+            <div class="uh-account-name" th:text="${loginEmail}">user@example.com</div>
+        </div>
+
+        <div class="uh-drawer-foot">
+            <hr>
+            <a class="uh-item" href="#" th:href="@{/settings}" th:classappend="${navActive == 'settings'} ? 'active'">
+                <span class="ico">⚙</span>設定
+            </a>
+            <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                <button type="submit"><span class="ico">⇥</span>ログアウト</button>
+            </form>
+        </div>
+    </aside>
+
+<script th:inline="none">
+(function () {
+  var root = document.querySelector('header.uh');
+  if (!root) { return; }
+  var burger = document.getElementById('uhBurger');
+  function setOpen(open) {
+    root.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  burger.addEventListener('click', function (e) { e.stopPropagation(); setOpen(!root.classList.contains('open')); });
+  document.getElementById('uhClose').addEventListener('click', function () { setOpen(false); });
+  document.getElementById('uhDim').addEventListener('click', function () { setOpen(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { setOpen(false); } });
+
+  // 右上のアカウントメニュー: 外側をクリックしたら閉じる
+  document.addEventListener('click', function (e) {
+    root.querySelectorAll('details').forEach(function (d) {
+      if (d.open && !d.contains(e.target)) { d.removeAttribute('open'); }
+    });
+  });
+})();
+</script>
+</header>
+</body>
+</html>

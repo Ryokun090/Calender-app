@@ -2,38 +2,39 @@
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<title th:text="${calendar.name} + ' の空き日程調整'">空き日程調整</title>
+<title th:text="${calendar.name} + ' の空き日程調整 - SukiMatch'">空き日程調整</title>
+<th:block th:replace="~{fragments/base :: css}"></th:block>
 <style>
-body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif; }
-.poll-item { display:block; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:8px; text-decoration:none; color:inherit; }
-.badge { font-size:11px; padding:2px 8px; border-radius:10px; }
-.badge-open { background:#e6f1fb; color:#185fa5; }
-.badge-confirmed { background:#e8f3df; color:#3b6d11; }
+.poll-row { display: flex; align-items: center; gap: 16px; border-radius: 9px; padding: 20px 22px; margin-bottom: 14px; background: var(--sm-blue-bg); }
+.poll-row.confirmed { background: var(--sm-green-bg); }
+.poll-row:hover { filter: brightness(.97); }
+.poll-row .t { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; word-break: break-word; }
+.poll-row .st { font-size: 11px; font-weight: 700; color: var(--sm-blue); white-space: nowrap; }
+.poll-row.confirmed .st { color: var(--sm-green); }
+.poll-row .go { font-size: 11px; color: var(--sm-sub); white-space: nowrap; }
 </style>
 </head>
 <body>
-<div style="max-width:480px;margin:40px auto;padding:0 16px;">
-    <p><a th:href="@{/calendars/{id}(id=${calendar.id})}">&larr; カレンダーに戻る</a></p>
-    <h1 style="font-size:18px;" th:text="${calendar.name} + ' の空き日程調整'">空き日程調整</h1>
-
-    <p style="margin:16px 0;">
-        <a th:href="@{/calendars/{id}/free-slots/add(id=${calendar.id})}">
-            <button type="button">+ 新しい候補を作る</button>
-        </a>
-    </p>
-
-    <div th:if="${#lists.isEmpty(polls)}" style="color:#999;font-size:13px;">
-        まだ候補日程はありません。
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page">
+    <div class="sm-head">
+        <div>
+            <h1 class="sm-title lg">空き日程を探す</h1>
+            <p class="sm-sub" th:text="${calendar.name} + ' のメンバーに、候補日程を○×で答えてもらいます'">メンバーに候補日程を○×で答えてもらいます</p>
+        </div>
+        <a class="sm-btn dark tall" th:href="@{/calendars/{id}/free-slots/add(id=${calendar.id})}">＋ 新しい候補を作る</a>
     </div>
 
-    <a class="poll-item" th:each="poll : ${polls}" th:href="@{/polls/{id}(id=${poll.id})}">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong th:text="${poll.title}">タイトル</strong>
-            <span class="badge"
-                  th:classappend="${poll.status == 'open'} ? 'badge-open' : 'badge-confirmed'"
-                  th:text="${poll.status == 'open'} ? '回答受付中' : '確定済み'">状態</span>
-        </div>
-    </a>
+    <div class="sm-card" style="padding:24px">
+        <p class="sm-muted" th:if="${#lists.isEmpty(polls)}" style="margin:8px 0">まだ候補日程はありません。</p>
+
+        <a class="poll-row" th:each="poll : ${polls}" th:classappend="${poll.status == 'confirmed'} ? 'confirmed'"
+           th:href="@{/polls/{id}(id=${poll.id})}">
+            <span class="t" th:text="${poll.title}">タイトル</span>
+            <span class="st" th:text="${poll.status == 'open'} ? '回答受付中' : '確定済み'">状態</span>
+            <span class="go">詳細を見る ›</span>
+        </a>
+    </div>
 </div>
 </body>
 </html>

@@ -81,4 +81,33 @@ public class UserService implements UserDetailsService {
     public void enableTwoFactor(Long userId) {
         userMapper.updateTwoFaEnabled(userId, true);
     }
+
+    // ---- ここから設定画面用 ----
+
+    /** 設定画面の表示用に、ユーザーの最新の情報(名前・メール・2段階認証の状態)を取る。 */
+    public User findUser(Long userId) {
+        return userMapper.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("ユーザーが見つかりません"));
+    }
+
+    /** ニックネームを変更する。呼ぶ側で空欄・文字数のチェックを済ませておくこと。 */
+    @Transactional
+    public void updateName(Long userId, String name) {
+        userMapper.updateName(userId, name);
+    }
+
+    /** 設定画面から2段階認証をやめる。 */
+    @Transactional
+    public void disableTwoFactor(Long userId) {
+        userMapper.updateTwoFaEnabled(userId, false);
+    }
+
+    /** 入力されたパスワードが、本人のパスワードと一致するか(2段階認証をやめるときの本人確認に使う)。 */
+    public boolean matchesPassword(Long userId, String rawPassword) {
+        if (rawPassword == null || rawPassword.isEmpty()) {
+            return false;
+        }
+        User user = findUser(userId);
+        return passwordEncoder.matches(rawPassword, user.getPasswordHash());
+    }
 }

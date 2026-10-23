@@ -120,9 +120,9 @@ public class PollService {
         }
 
         int totalMembers = calendarMemberMapper.countAcceptedMembers(poll.getCalendarId());
-        boolean isOwner = calendarAuthService.isOwner(userId, poll.getCalendarId());
+        boolean canConfirm = canConfirm(poll, userId);
 
-        return new PollDetail(poll, summaries, totalMembers, isOwner);
+        return new PollDetail(poll, summaries, totalMembers, canConfirm);
     }
 
     @Transactional
@@ -147,8 +147,8 @@ public class PollService {
     @Transactional
     public Long confirmCandidate(Long pollId, Long userId, Long candidateId) {
         SchedulePoll poll = findPollOrThrow(pollId);
-        if (!calendarAuthService.isOwner(userId, poll.getCalendarId())) {
-            throw new AccessDeniedException("候補日程を確定できるのはカレンダーの管理者のみです");
+        if (!canConfirm(poll, userId)) {
+            throw new AccessDeniedException("候補日程を確定できるのは、作成者かカレンダーの管理者のみです");
         }
         if (!poll.isOpen()) {
             throw new IllegalStateException("この候補日程はすでに確定しています");
@@ -173,6 +173,19 @@ public class PollService {
         pollMapper.confirm(pollId, schedule.getId());
 
         return schedule.getId();
+    }
+
+    /**
+     * 確定できるのは「その調整の作成者」または「カレンダーのオーナー」。
+     * 作成者がメンバーから外れた場合でも、オーナーが確定できるようにオーナーも許可する。
+     * 作成者であっても、今もメンバーである場合に限る。
+     */
+    private boolean canConfirm(SchedulePoll poll, Long userId) {
+        if (calendarAuthService.isOwner(userId, poll.getCalendarId())) {
+            return true;
+        }
+        return userId.equals(poll.getCreatedBy())
+                && calendarAuthService.isMember(userId, poll.getCalendarId());
     }
 
     private SchedulePoll findPollOrThrow(Long pollId) {

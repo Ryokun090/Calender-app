@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'メンバー - ' + ${calendar.name}">メンバー一覧</title>
+    <th:block th:replace="~{fragments/base :: css}"></th:block>
+    <style>
+        .invite-box { background: var(--sm-blue-bg); border-radius: 10px; padding: 16px 20px; margin-bottom: 8px; }
+        .invite-box .hint { font-size: 11px; color: var(--sm-sub); }
+        .invite-box .code { font-size: 24px; font-weight: 700; letter-spacing: 4px; margin-top: 4px; color: var(--sm-text); word-break: break-all; }
+        .role { font-size: 11px; color: var(--sm-sub); min-width: 56px; text-align: right; }
+        .me { font-size: 10px; font-weight: 500; color: var(--sm-blue); background: var(--sm-blue-bg); border-radius: 8px; padding: 1px 8px; margin-left: 6px; }
+        .joined { font-size: 10px; color: var(--sm-sub); }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page narrow">
+    <a class="sm-back" th:href="@{/calendars/{id}(id=${calendar.id})}">&larr; カレンダーに戻る</a>
+
+    <div class="sm-card">
+        <div class="sm-head" style="margin-bottom:0">
+            <div>
+                <h1 class="sm-title">カレンダー共有</h1>
+                <p style="font-size:15px;font-weight:500;margin:10px 0 0" th:text="${calendar.name}">カレンダー名</p>
+            </div>
+            <!-- 招待コードの発行(オーナーで、共有カレンダーのときだけ) -->
+            <form th:if="${isOwner and !calendar.personal}" th:action="@{/calendars/{id}/invite(id=${calendar.id})}" method="post" style="margin:0"
+                  th:data-reissue="${invite != null}"
+                  onsubmit="return this.dataset.reissue !== 'true' || confirm('再発行すると、今のコードは使えなくなります。よろしいですか？');">
+                <button type="submit" class="sm-btn dark tall" style="min-width:200px"
+                        th:text="${invite != null} ? '招待コードを再発行する' : '＋ メンバーを招待'">＋ メンバーを招待</button>
+            </form>
+        </div>
+
+        <hr class="sm-hr">
+
+        <div class="sm-alert" th:if="${message}" th:text="${message}">メッセージ</div>
+
+        <div class="invite-box" th:if="${invite}">
+            <div class="hint">このコードを友人に共有してください(発行から7日間有効)</div>
+            <div class="code" th:text="${invite}">A7K2P9</div>
+        </div>
+        <p class="sm-muted" th:if="${isOwner and !calendar.personal and invite == null}" style="margin:0 0 8px">
+            「メンバーを招待」を押すと、招待コードが発行されます。
+        </p>
+        <p class="sm-muted" th:if="${calendar.personal}" style="margin:0 0 8px">個人用のカレンダーは、メンバーを招待できません。</p>
+
+        <h2 class="sm-h3" style="margin-top:28px" th:text="'メンバー(' + ${#lists.size(members)} + '人)'">メンバー</h2>
+
+        <div class="sm-row" th:each="m : ${members}">
+            <div class="sm-avatar" th:text="${#strings.substring(m.name, 0, 1)}">大</div>
+            <div class="grow">
+                <div style="font-size:12px;font-weight:500">
+                    <span th:text="${m.name}">名前</span>
+                    <span class="me" th:if="${m.userId == currentUserId}">あなた</span>
+                </div>
+                <div class="joined" th:text="${#temporals.format(m.joinedAt, 'yyyy/MM/dd')} + ' に参加'">2026/10/16 に参加</div>
+            </div>
+            <span class="role" th:text="${m.owner} ? '管理者' : 'メンバー'">メンバー</span>
+            <div style="width:32px;text-align:right">
+            <form th:if="${isOwner and !m.owner and m.userId != currentUserId}"
+                  th:action="@{/calendars/{id}/members/{userId}/remove(id=${calendar.id}, userId=${m.userId})}"
+                  method="post" style="margin:0" th:data-name="${m.name}"
+                  onsubmit="return confirm(this.dataset.name + ' さんをこのカレンダーから外しますか？\n(この人の○×回答は消えます。予定やコメントは残ります)');">
+                <button type="submit" class="sm-link-btn">外す</button>
+            </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -32,4 +32,8 @@
         UPDATE users SET is_2fa_enabled = #{enabled} WHERE id = #{id}
     </update>
 
+    <update id="updateName">
+        UPDATE users SET name = #{name} WHERE id = #{id}
+    </update>
+
 </mapper>

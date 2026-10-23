@@ -16,4 +16,7 @@ public interface PollResponseMapper {
                @Param("response") String response);
 
     List<PollResponse> findByCandidateIds(@Param("candidateIds") List<Long> candidateIds);
+
+    /** メンバー追放時に、そのカレンダーの調整に出していた○×回答を全部消す(集計に残さないため)。 */
+    int deleteByUserInCalendar(@Param("calendarId") Long calendarId, @Param("userId") Long userId);
 }

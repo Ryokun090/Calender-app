@@ -48,7 +48,9 @@ public class ScheduleController {
     }
 
     @GetMapping("/calendars/{calendarId}/schedules/add")
-    public String addForm(@PathVariable Long calendarId, Model model) {
+    public String addForm(@PathVariable Long calendarId,
+                           @AuthenticationPrincipal LoginUser loginUser,
+                           Model model) {
         Calendar calendar = calendarMapper.findById(calendarId)
                 .orElseThrow(() -> new IllegalArgumentException("カレンダーが見つかりません: id=" + calendarId));
 
@@ -61,6 +63,7 @@ public class ScheduleController {
 
         model.addAttribute("calendar", calendar);
         model.addAttribute("createScheduleForm", form);
+        model.addAttribute("templates", scheduleService.listTemplates(calendarId, loginUser.getId()));
         return "schedules/add";
     }
 
@@ -76,6 +79,7 @@ public class ScheduleController {
             Calendar calendar = calendarMapper.findById(calendarId)
                     .orElseThrow(() -> new IllegalArgumentException("カレンダーが見つかりません: id=" + calendarId));
             model.addAttribute("calendar", calendar);
+            model.addAttribute("templates", scheduleService.listTemplates(calendarId, loginUser.getId()));
             return "schedules/add";
         }
 
@@ -86,6 +90,7 @@ public class ScheduleController {
             Calendar calendar = calendarMapper.findById(calendarId)
                     .orElseThrow(() -> new IllegalArgumentException("カレンダーが見つかりません: id=" + calendarId));
             model.addAttribute("calendar", calendar);
+            model.addAttribute("templates", java.util.List.of()); // 権限が無いので候補は出さない
             return "schedules/add";
         }
 

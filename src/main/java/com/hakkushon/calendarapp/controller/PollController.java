@@ -98,7 +98,7 @@ public class PollController {
         model.addAttribute("poll", detail.getPoll());
         model.addAttribute("candidates", detail.getCandidates());
         model.addAttribute("totalMembers", detail.getTotalMembers());
-        model.addAttribute("isOwner", detail.isOwner());
+        model.addAttribute("canConfirm", detail.isCanConfirm());
         return "polls/detail";
     }
 

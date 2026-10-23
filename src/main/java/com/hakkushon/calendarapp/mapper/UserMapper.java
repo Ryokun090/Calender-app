@@ -17,4 +17,6 @@ public interface UserMapper {
     void insert(User user);
 
     void updateTwoFaEnabled(@Param("id") Long id, @Param("enabled") boolean enabled);
+
+    void updateName(@Param("id") Long id, @Param("name") String name);
 }

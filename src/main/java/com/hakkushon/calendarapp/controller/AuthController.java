@@ -1,5 +1,9 @@
 package com.hakkushon.calendarapp.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,10 +23,6 @@ import com.hakkushon.calendarapp.dto.SignupForm;
 import com.hakkushon.calendarapp.service.OtpService;
 import com.hakkushon.calendarapp.service.OtpVerifyResult;
 import com.hakkushon.calendarapp.service.UserService;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
 
 @Controller
 public class AuthController {
@@ -89,8 +89,7 @@ public class AuthController {
             return "redirect:/auth/login";
         }
         userService.enableTwoFactor(userId);
-        request.getSession().removeAttribute(SIGNUP_USER_ID);
-        return "redirect:/auth/login?registered";
+        return loginAfterSignup(userId, request);
     }
 
     @PostMapping("/auth/signup/2fa-prompt/skip")
@@ -99,8 +98,19 @@ public class AuthController {
         if (userId == null) {
             return "redirect:/auth/login";
         }
+        return loginAfterSignup(userId, request);
+    }
+
+    /**
+     * 新規登録が終わったユーザーを、そのままログイン状態にしてカレンダー画面へ進める。
+     * (登録直後は本人がパスワードを設定したばかりなので、ログイン画面に戻さない)
+     * 権限が変わるタイミングなので、セッションIDを新しくしてセッション固定化攻撃を防ぐ。
+     */
+    private String loginAfterSignup(Long userId, HttpServletRequest request) {
         request.getSession().removeAttribute(SIGNUP_USER_ID);
-        return "redirect:/auth/login?registered";
+        request.changeSessionId();
+        establishAuthentication(userId, request);
+        return "redirect:/calendars";
     }
 
     private Long getSignupUserId(HttpServletRequest request) {
