@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>2段階認証の確認 - SukiMatch</title>
+<th:block th:replace="~{fragments/base :: css}"></th:block>
+<style>
+.code-input { text-align: center; letter-spacing: 6px; font-size: 18px; font-weight: 700; }
+.code-input::placeholder { letter-spacing: normal; font-size: 12px; font-weight: 400; }
+.text-btn { background: none; border: none; padding: 0; font: inherit; font-size: 11px; font-weight: 500; color: var(--sm-blue); cursor: pointer; }
+.text-btn:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page narrow" style="max-width:800px">
+  <h1 class="sm-title" style="font-size:28px">2段階認証の設定</h1>
+  <p class="sm-sub" style="font-size:15px;margin-bottom:28px">メールで届いたコードを入力すると、2段階認証が有効になります。</p>
+
+  <div class="sm-card" style="border-radius:14px">
+    <h2 style="font-size:20px;font-weight:700;margin:0 0 12px">認証コードの確認</h2>
+    <p class="set-desc" style="font-size:14px;color:var(--sm-sub);margin:0 0 24px">
+      <strong style="color:var(--sm-text)" th:text="${userEmail}">user@example.com</strong> に届いた6桁の認証コードを入力してください。</p>
+
+    <div class="sm-alert ok" th:if="${message}" th:text="${message}">メッセージ</div>
+    <div class="sm-alert error" th:if="${error}" th:text="${error}">エラー</div>
+
+    <form style="max-width:380px" th:action="@{/settings/2fa/verify}" method="post">
+      <div class="sm-field">
+        <label class="sm-label" for="code">認証コード</label>
+        <input class="sm-input code-input" id="code" type="text" name="code" inputmode="numeric" maxlength="6" required autofocus autocomplete="one-time-code" placeholder="6桁の認証コード">
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px">
+        <button type="submit" class="sm-btn brand tall" style="min-width:160px">有効にする</button>
+        <a class="sm-btn tall" th:href="@{/settings}">キャンセル</a>
+      </div>
+    </form>
+
+    <form th:action="@{/settings/2fa/resend}" method="post" style="margin:24px 0 0">
+      <button type="submit" class="text-btn">認証コードを再送信</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

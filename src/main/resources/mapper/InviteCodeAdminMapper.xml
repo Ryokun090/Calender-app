@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hakkushon.calendarapp.mapper.InviteCodeAdminMapper">
+
+    <update id="expireAllByCalendar">
+        UPDATE invite_codes
+        SET expires_at = DATE_SUB(NOW(), INTERVAL 1 SECOND)
+        WHERE calendar_id = #{calendarId}
+          AND expires_at &gt; NOW()
+    </update>
+
+    <select id="findActiveCode" resultType="string">
+        SELECT code
+        FROM invite_codes
+        WHERE calendar_id = #{calendarId}
+          AND expires_at &gt; NOW()
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+</mapper>

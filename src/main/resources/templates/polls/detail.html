@@ -2,116 +2,82 @@
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title th:text="${poll.title} + ' - 空き日程調整'">空き日程調整</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<th:block th:replace="~{fragments/base :: css}"></th:block>
 <style>
-:root {
-  --surface-2:#ffffff;
-  --surface-1:#f7f6f2;
-  --surface-0:#f1efe8;
-  --text-primary:#1a1a1a;
-  --text-secondary:#5f5e5a;
-  --text-muted:#9a988e;
-  --border:#e2ded2;
-  --border-strong:#c9c4b4;
-  --fill-primary:#1a1a1a;
-  --on-primary:#ffffff;
-  --fill-accent:#378add;
-  --text-accent:#185fa5;
-  --fill-success:#639922;
-  --fill-danger:#e24b4a;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  padding: 32px 16px;
-  background: var(--surface-0);
-  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
-  color: var(--text-primary);
-}
-button {
-  font-family: inherit;
-  font-size: 13px;
-  padding: 9px 12px;
-  border: 0.5px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--surface-2);
-  color: var(--text-primary);
-  cursor: pointer;
-}
-button:hover { background: var(--surface-1); }
-button.primary { background: var(--fill-primary); color: var(--on-primary); border: none; }
-a { color: inherit; text-decoration: none; }
-i.ti { line-height: 1; }
-.candidate-card { border:0.5px solid var(--border); border-radius:10px; padding:10px; margin-bottom:8px; background: var(--surface-2); }
-.vote-btn { flex:1; padding:8px; border-radius:8px; border:0.5px solid var(--border-strong); text-align:center; font-size:14px; cursor:pointer; background:var(--surface-2); user-select:none; }
-.vote-btn input { display:none; }
-.vote-btn:has(input[value="yes"]:checked) { background: rgba(99,153,34,0.15); border-color: var(--fill-success); color:#3b6d11; }
-.vote-btn:has(input[value="no"]:checked) { background: rgba(226,75,74,0.15); border-color: var(--fill-danger); color:#a32d2d; }
+.cand { background: var(--sm-bg); border: 1px solid var(--sm-line); border-radius: 9px; padding: 16px 20px; margin-bottom: 12px; }
+.cand .when { font-size: 14px; font-weight: 700; }
+.cand .time { font-size: 12px; color: var(--sm-sub); margin: 2px 0 12px; }
+.cand .votes { display: flex; gap: 10px; flex-wrap: wrap; }
+.vote { position: relative; display: inline-flex; align-items: center; justify-content: center; height: 38px; padding: 0 20px; border-radius: 8px; border: 1px solid var(--sm-line); background: #fff; font-size: 12px; font-weight: 500; cursor: pointer; user-select: none; }
+.vote input { position: absolute; opacity: 0; pointer-events: none; }
+.vote:hover { background: #f1f4f9; }
+.vote.yes-selected, .vote.yes:has(input:checked) { background: var(--sm-green-bg); border-color: var(--sm-green); color: #1f7a50; }
+.vote.no-selected, .vote.no:has(input:checked) { background: var(--sm-danger-bg); border-color: var(--sm-danger); color: var(--sm-danger); }
+.cand .count { font-size: 11px; color: var(--sm-sub); margin-top: 10px; }
+.confirm-row { display: flex; align-items: center; gap: 16px; background: var(--sm-green-bg); border-radius: 9px; padding: 14px 20px; margin-bottom: 12px; }
+.confirm-row .w { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; }
+.confirm-row .n { font-size: 13px; font-weight: 700; color: var(--sm-green); }
+.confirm-row form { margin: 0; }
 </style>
 </head>
 <body>
-<div style="max-width:360px;margin:0 auto;background:var(--surface-1);border-radius:16px;padding:16px;border:0.5px solid var(--border)">
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page narrow">
+  <a class="sm-back" th:href="@{/calendars/{id}/free-slots(id=${poll.calendarId})}">&larr; 空き日程の一覧に戻る</a>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <a th:href="@{/calendars/{id}/free-slots(id=${poll.calendarId})}">
-      <i class="ti ti-chevron-down" style="font-size:18px;transform:rotate(90deg)" aria-hidden="true"></i>
-    </a>
-    <div style="font-size:15px;font-weight:500">空き日程調整</div>
-    <span style="width:18px"></span>
-  </div>
+  <div class="sm-card">
+    <div class="sm-head" style="margin-bottom:8px">
+      <h1 class="sm-title" th:text="${poll.title}">タイトル</h1>
+      <span class="sm-chip" th:classappend="${poll.status == 'confirmed'} ? 'green'" th:text="${poll.status == 'open'} ? '回答受付中' : '予定確定'">回答受付中</span>
+    </div>
+    <p class="sm-sub" style="margin:0" th:if="${poll.location != null and !#strings.isEmpty(poll.location)}" th:text="'場所:' + ${poll.location}">場所</p>
+    <p class="sm-sub" th:text="'メンバー ' + ${totalMembers} + '人中'">メンバー数</p>
 
-  <div style="font-size:17px;font-weight:600;margin-bottom:4px" th:text="${poll.title}">タイトル</div>
-  <div th:if="${poll.location != null and !#strings.isEmpty(poll.location)}"
-       style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">
-    <i class="ti ti-map-pin" aria-hidden="true"></i> <span th:text="${poll.location}">場所</span>
-  </div>
-  <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px"
-       th:text="'メンバー ' + ${totalMembers} + '人中'">メンバー数</div>
+    <hr class="sm-hr">
 
-  <div th:if="${poll.status == 'confirmed'}" style="background:#e6f1fb;border-radius:8px;padding:10px;margin-bottom:14px;font-size:13px;">
-    この候補日程は確定済みです。
-    <a th:href="@{/schedules/{id}(id=${poll.confirmedScheduleId})}" style="color:var(--text-accent);text-decoration:underline">確定した予定を見る</a>
-  </div>
-
-  <form th:if="${poll.status == 'open'}" th:action="@{/polls/{id}/responses(id=${poll.id})}" method="post">
-    <div th:each="c : ${candidates}" class="candidate-card">
-      <div style="font-size:13px;font-weight:500;margin-bottom:2px"
-           th:text="${#temporals.format(c.startTime, 'M月d日(E)')}">9月20日(日)</div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px"
-           th:text="${#temporals.format(c.startTime, 'HH:mm')} + '〜' + ${#temporals.format(c.endTime, 'HH:mm')}">19:00〜21:00</div>
-
-      <div style="display:flex;gap:8px;margin-bottom:6px">
-        <label class="vote-btn">
-          <input type="radio" th:name="'responses[' + ${c.candidateId} + ']'" value="yes" th:checked="${c.myResponseYes}">
-          ○ 参加できる
-        </label>
-        <label class="vote-btn">
-          <input type="radio" th:name="'responses[' + ${c.candidateId} + ']'" value="no" th:checked="${c.myResponseNo}">
-          × 参加できない
-        </label>
-      </div>
-      <div style="font-size:11px;color:var(--text-muted)"
-           th:text="'○ ' + ${c.yesCount} + '人 / × ' + ${c.noCount} + '人'">○0人 / ×0人</div>
+    <div class="sm-alert ok" th:if="${poll.status == 'confirmed'}">
+      この候補日程は確定済みです。
+      <a th:if="${poll.confirmedScheduleId != null}" th:href="@{/schedules/{id}(id=${poll.confirmedScheduleId})}" class="sm-link" style="font-size:12px">確定した予定を見る</a>
+      <span th:if="${poll.confirmedScheduleId == null}" class="sm-muted">(確定した予定は削除されました)</span>
     </div>
 
-    <button type="submit" class="primary" style="width:100%;margin-top:6px">回答を保存</button>
-  </form>
-
-  <div th:if="${poll.status == 'open' and isOwner}" style="margin-top:20px;padding-top:14px;border-top:0.5px solid var(--border)">
-    <div style="font-size:13px;font-weight:500;margin-bottom:8px">この候補で確定する(管理者のみ)</div>
-    <form th:each="c : ${candidates}" th:action="@{/polls/{id}/confirm(id=${poll.id})}" method="post" style="margin-bottom:6px">
-      <input type="hidden" name="candidateId" th:value="${c.candidateId}">
-      <button type="submit" style="width:100%;text-align:left;display:flex;justify-content:space-between">
-        <span th:text="${#temporals.format(c.startTime, 'M月d日(E) HH:mm')} + '〜' + ${#temporals.format(c.endTime, 'HH:mm')}">候補</span>
-        <span th:text="'○' + ${c.yesCount}">○0</span>
-      </button>
+    <form th:if="${poll.status == 'open'}" th:action="@{/polls/{id}/responses(id=${poll.id})}" method="post">
+      <h2 class="sm-h3">候補日</h2>
+      <div class="cand" th:each="c : ${candidates}">
+        <div class="when" th:text="${#temporals.format(c.startTime, 'M月d日(E)')}">9月20日(日)</div>
+        <div class="time" th:text="${#temporals.format(c.startTime, 'HH:mm')} + '〜' + ${#temporals.format(c.endTime, 'HH:mm')}">19:00〜21:00</div>
+        <div class="votes">
+          <label class="vote yes" th:classappend="${c.myResponseYes} ? 'yes-selected'">
+            <input type="radio" th:name="'responses[' + ${c.candidateId} + ']'" value="yes" th:checked="${c.myResponseYes}">
+            ○ 参加できる
+          </label>
+          <label class="vote no" th:classappend="${c.myResponseNo} ? 'no-selected'">
+            <input type="radio" th:name="'responses[' + ${c.candidateId} + ']'" value="no" th:checked="${c.myResponseNo}">
+            × 参加できない
+          </label>
+        </div>
+        <div class="count" th:text="'○ ' + ${c.yesCount} + '人 / × ' + ${c.noCount} + '人'">○0人 / ×0人</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:20px">
+        <button type="submit" class="sm-btn dark tall" style="min-width:160px">回答を保存</button>
+      </div>
     </form>
+
+    <div th:if="${poll.status == 'open' and canConfirm}" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--sm-line)">
+      <h2 class="sm-h3">この候補で確定する(作成者・管理者のみ)</h2>
+      <div class="confirm-row" th:each="c : ${candidates}">
+        <span class="w" th:text="${#temporals.format(c.startTime, 'M月d日(E) HH:mm')} + '〜' + ${#temporals.format(c.endTime, 'HH:mm')}">候補</span>
+        <span class="n" th:text="'○ ' + ${c.yesCount} + '人'">○0人</span>
+        <form th:action="@{/polls/{id}/confirm(id=${poll.id})}" method="post">
+          <input type="hidden" name="candidateId" th:value="${c.candidateId}">
+          <button type="submit" class="sm-btn dark">この日程を確定</button>
+        </form>
+      </div>
+    </div>
+
+    <p class="sm-muted" th:if="${#lists.isEmpty(candidates)}">候補日程がありません。</p>
   </div>
-
-  <div th:if="${#lists.isEmpty(candidates)}" style="font-size:12px;color:var(--text-muted)">候補日程がありません。</div>
 </div>
-
 </body>
 </html>

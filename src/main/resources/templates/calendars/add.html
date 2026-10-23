@@ -2,38 +2,52 @@
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>カレンダーを追加 - 共有カレンダーアプリ</title>
+    <title>カレンダーを追加 - SukiMatch</title>
+    <th:block th:replace="~{fragments/base :: css}"></th:block>
+    <style>
+        .add-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 28px; }
+        @media (max-width: 760px) { .add-grid { grid-template-columns: 1fr; } }
+        .add-card h2 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+        .add-card .desc { font-size: 12px; color: var(--sm-sub); margin: 0 0 22px; }
+        .code-input { text-align: center; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
+        .code-input::placeholder { letter-spacing: normal; text-transform: none; font-weight: 400; }
+    </style>
 </head>
 <body>
-<div style="max-width:480px;margin:40px auto;padding:24px;">
-    <h1 style="font-size:18px;">カレンダーを追加</h1>
-    <p style="font-size:13px;color:#777;">新しいカレンダーを作成するか、招待コードから参加できます。</p>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page narrow" style="max-width:960px">
+    <a class="sm-back" th:href="@{/calendars}">&larr; カレンダーに戻る</a>
+    <h1 class="sm-title">カレンダーを追加</h1>
+    <p class="sm-sub">新しいカレンダーを作成するか、招待コードから参加できます。</p>
 
-    <div style="border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;">
-        <h2 style="font-size:14px;margin-top:0;">新しいカレンダーを作成</h2>
-        <form th:action="@{/calendars}" th:object="${createCalendarForm}" method="post">
-            <label>カレンダー名</label><br/>
-            <input type="text" th:field="*{name}" placeholder="例:サークル活動" style="width:100%;">
-            <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;font-size:12px;"></p>
-            <button type="submit" style="width:100%;margin-top:8px;">カレンダーを作成</button>
-        </form>
+    <div class="add-grid">
+        <div class="sm-card add-card">
+            <h2>新しいカレンダーを作成</h2>
+            <p class="desc">友達やサークルと予定を共有するカレンダーを作ります。</p>
+            <form th:action="@{/calendars}" th:object="${createCalendarForm}" method="post">
+                <div class="sm-field">
+                    <label class="sm-label" for="name">カレンダー名</label>
+                    <input class="sm-input" type="text" th:field="*{name}" placeholder="例：サークル活動">
+                    <p class="sm-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
+                </div>
+                <button type="submit" class="sm-btn dark tall block">カレンダーを作成</button>
+            </form>
+        </div>
+
+        <div class="sm-card add-card">
+            <h2>招待コードで参加</h2>
+            <p class="desc">友達から届いた招待コードを入力します。</p>
+            <p class="sm-alert error" th:if="${joinError}" th:text="${joinError}"></p>
+            <form th:action="@{/calendars/join}" th:object="${joinCalendarForm}" method="post">
+                <div class="sm-field">
+                    <label class="sm-label" for="code">招待コード</label>
+                    <input class="sm-input code-input" type="text" th:field="*{code}" placeholder="12文字以内のコードを入力">
+                    <p class="sm-error" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></p>
+                </div>
+                <button type="submit" class="sm-btn dark tall block">参加する</button>
+            </form>
+        </div>
     </div>
-
-    <div style="border:1px solid #ddd;border-radius:8px;padding:16px;">
-        <h2 style="font-size:14px;margin-top:0;">招待コードで参加</h2>
-        <p th:if="${joinError}" th:text="${joinError}" style="color:red;font-size:12px;"></p>
-        <form th:action="@{/calendars/join}" th:object="${joinCalendarForm}" method="post">
-            <label>招待コード</label><br/>
-            <input type="text" th:field="*{code}" placeholder="12文字以内のコードを入力"
-                   style="width:100%;text-align:center;letter-spacing:2px;text-transform:uppercase;">
-            <p th:if="${#fields.hasErrors('code')}" th:errors="*{code}" style="color:red;font-size:12px;"></p>
-            <button type="submit" style="width:100%;margin-top:8px;">参加する</button>
-        </form>
-    </div>
-
-    <p style="text-align:center;margin-top:16px;">
-        <a th:href="@{/calendars}">カレンダー一覧へ戻る</a>
-    </p>
 </div>
 </body>
 </html>

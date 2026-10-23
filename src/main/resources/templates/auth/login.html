@@ -3,30 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>ログイン - SukiMatch</title>
+    <th:block th:replace="~{fragments/base :: css}"></th:block>
 </head>
-<body>
-<div style="max-width:360px;margin:60px auto;padding:24px;border:1px solid #ddd;border-radius:12px;">
-    <h1 style="text-align:center;font-size:18px;">SukiMatch</h1>
+<body class="sm-auth">
+<div class="sm-auth-wrap">
+    <h1 class="sm-brand">SukiMatch</h1>
+    <p class="sm-brand-sub">みんなの予定を、もっと簡単に。</p>
 
-    <p th:if="${param.error}" style="color:red;">メールアドレスまたはパスワードが違います</p>
-    <p th:if="${param.logout}" style="color:green;">ログアウトしました</p>
-    <p th:if="${param.registered}" style="color:green;">登録が完了しました。ログインしてください</p>
+    <div class="sm-auth-form">
+        <p class="sm-alert error" th:if="${param.error}">メールアドレスまたはパスワードが違います</p>
+        <p class="sm-alert ok" th:if="${param.logout}">ログアウトしました</p>
+        <p class="sm-alert ok" th:if="${param.registered}">登録が完了しました。ログインしてください</p>
 
-    <form th:action="@{/auth/login}" method="post">
-        <div>
-            <label>メールアドレス</label><br/>
-            <input type="email" name="username" required style="width:100%;">
-        </div>
-        <div style="margin-top:8px;">
-            <label>パスワード</label><br/>
-            <input type="password" name="password" required style="width:100%;">
-        </div>
-        <button type="submit" style="width:100%;margin-top:16px;">ログイン</button>
-    </form>
+        <form th:action="@{/auth/login}" method="post">
+            <div class="sm-field">
+                <label class="sm-label" for="username">メールアドレス</label>
+                <input class="sm-input" id="username" type="email" name="username" required autofocus placeholder="メールアドレスを入力">
+            </div>
+            <div class="sm-field">
+                <label class="sm-label" for="password">パスワード</label>
+                <input class="sm-input" id="password" type="password" name="password" required placeholder="パスワードを入力">
+            </div>
+            <div style="text-align:center;margin-top:24px">
+                <button type="submit" class="sm-btn dark tall" style="min-width:156px">ログイン</button>
+            </div>
+        </form>
+    </div>
 
-    <p style="text-align:center;margin-top:16px;">
-        アカウントをお持ちでない方は <a th:href="@{/auth/signup}">新規登録</a>
-    </p>
+    <div class="sm-auth-links">
+        <span class="plain">アカウントをお持ちでない方は</span>
+        <a class="sm-link" style="font-size:12px" th:href="@{/auth/signup}">新規登録</a>
+    </div>
 </div>
 </body>
 </html>

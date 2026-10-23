@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>設定 - SukiMatch</title>
+<th:block th:replace="~{fragments/base :: css}"></th:block>
+<style>
+.set-card { border-radius: 14px; margin-bottom: 24px; }
+.set-card h2 { font-size: 20px; font-weight: 700; margin: 0 0 20px; }
+.set-state { font-size: 14px; color: var(--sm-sub); margin: 0 0 8px; }
+.set-state strong { color: var(--sm-text); }
+.set-desc { font-size: 14px; color: var(--sm-sub); margin: 0 0 24px; line-height: 1.7; }
+.set-form { max-width: 420px; }
+.set-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.sm-btn.brand { min-width: 220px; height: 44px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page narrow" style="max-width:800px">
+  <h1 class="sm-title" style="font-size:28px">設定</h1>
+  <p class="sm-sub" style="font-size:15px;margin-bottom:28px">アカウントの情報と、ログインの安全性を管理します。</p>
+
+  <div class="sm-alert ok" th:if="${message}" th:text="${message}">メッセージ</div>
+  <div class="sm-alert error" th:if="${error}" th:text="${error}">エラー</div>
+
+  <!-- アカウント -->
+  <div class="sm-card set-card">
+    <h2>アカウント</h2>
+    <form class="set-form" th:action="@{/settings/name}" method="post">
+      <div class="sm-field">
+        <label class="sm-label" for="name">ニックネーム</label>
+        <input class="sm-input" id="name" type="text" name="name" maxlength="50" required th:value="${userName}">
+        <p class="sm-error" th:if="${nameError}" th:text="${nameError}"></p>
+        <p class="sm-muted" style="font-size:11px;margin:6px 0 0">カレンダーのメンバー一覧やコメントに表示される名前です(50文字以内)。</p>
+      </div>
+      <div class="sm-field">
+        <label class="sm-label">メールアドレス</label>
+        <input class="sm-input" type="email" th:value="${userEmail}" disabled>
+      </div>
+      <button type="submit" class="sm-btn dark tall" style="min-width:140px">保存する</button>
+    </form>
+  </div>
+
+  <!-- 2段階認証 -->
+  <div class="sm-card set-card">
+    <h2>2段階認証</h2>
+    <p class="set-state">現在の状態：<strong th:text="${twoFaEnabled} ? '有効' : '無効'">無効</strong></p>
+
+    <th:block th:if="${!twoFaEnabled}">
+      <p class="set-desc">有効にすると、ログイン時にメールで届く6桁の認証コードが必要になります。<br>
+        まず確認用のコードを <strong th:text="${userEmail}">user@example.com</strong> に送り、入力できたことを確かめてから有効になります。</p>
+      <form th:action="@{/settings/2fa/start}" method="post" style="margin:0">
+        <button type="submit" class="sm-btn brand">2段階認証を有効にする</button>
+      </form>
+    </th:block>
+
+    <th:block th:if="${twoFaEnabled}">
+      <p class="set-desc">ログイン時に、メールで届く6桁の認証コードが必要です。<br>
+        やめる場合は、本人確認のためパスワードを入力してください。</p>
+      <form class="set-form" th:action="@{/settings/2fa/disable}" method="post"
+            onsubmit="return confirm('2段階認証を無効にします。よろしいですか？');">
+        <div class="sm-field">
+          <label class="sm-label" for="password">パスワード</label>
+          <input class="sm-input" id="password" type="password" name="password" required autocomplete="current-password" placeholder="パスワードを入力">
+        </div>
+        <button type="submit" class="sm-btn danger tall" style="min-width:220px">2段階認証を無効にする</button>
+      </form>
+    </th:block>
+  </div>
+</div>
+</body>
+</html>

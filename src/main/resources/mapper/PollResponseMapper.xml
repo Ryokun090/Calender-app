@@ -31,4 +31,11 @@
         </foreach>
     </select>
 
+    <delete id="deleteByUserInCalendar">
+        DELETE r FROM poll_responses r
+        JOIN poll_candidates c ON c.id = r.candidate_id
+        JOIN schedule_polls p ON p.id = c.poll_id
+        WHERE p.calendar_id = #{calendarId} AND r.user_id = #{userId}
+    </delete>
+
 </mapper>

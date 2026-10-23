@@ -2,29 +2,42 @@
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<title>通知一覧</title>
+<title>通知 - SukiMatch</title>
+<th:block th:replace="~{fragments/base :: css}"></th:block>
 <style>
-body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif; }
-.notif-item { display:block; border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:8px; text-decoration:none; color:inherit; }
-.notif-item.unread { background:#eef6ff; border-color:#bcd; }
-.notif-date { font-size:11px; color:#999; margin-top:4px; }
+.notif { display: block; position: relative; border-radius: 10px; padding: 18px 24px 18px 28px; margin-bottom: 14px; background: var(--sm-blue-bg); }
+.notif.green { background: var(--sm-green-bg); }
+.notif.orange { background: var(--sm-orange-bg); }
+.notif.purple { background: var(--sm-purple-bg); }
+.notif:hover { filter: brightness(.97); }
+.notif .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.notif .msg { font-size: 13px; font-weight: 700; word-break: break-word; }
+.notif .time { font-size: 10px; color: var(--sm-sub); white-space: nowrap; margin-top: 2px; }
+.notif.read { opacity: .6; }
+.notif.read .msg { font-weight: 500; }
+.notif .dot { position: absolute; left: 12px; top: 24px; width: 8px; height: 8px; border-radius: 4px; background: #eb5966; }
 </style>
 </head>
 <body>
-<div style="max-width:480px;margin:40px auto;padding:0 16px;">
-    <p><a th:href="@{/calendars}">&larr; カレンダー一覧</a></p>
-    <h1 style="font-size:18px;">通知一覧</h1>
-
-    <div th:if="${#lists.isEmpty(notifications)}" style="color:#999;font-size:13px;">
-        通知はありません。
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="sm-page">
+    <div class="sm-head">
+        <h1 class="sm-title lg">通知</h1>
     </div>
 
-    <a th:each="n : ${notifications}"
-       class="notif-item" th:classappend="${!n.read} ? 'unread'"
-       th:href="@{/notifications/{id}/open(id=${n.id})}">
-        <div style="font-size:13px;" th:text="${n.message}">通知メッセージ</div>
-        <div class="notif-date" th:text="${#temporals.format(n.createdAt, 'yyyy/MM/dd HH:mm')}">2026/09/20 19:00</div>
-    </a>
+    <div class="sm-card" style="padding:24px">
+        <p class="sm-muted" th:if="${#lists.isEmpty(notifications)}" style="margin:8px 0">通知はありません。</p>
+
+        <a th:each="n : ${notifications}" class="notif"
+           th:classappend="${(n.type == 'poll_confirmed' ? 'green' : (n.type == 'invite_joined' or n.type == 'reminder' ? 'purple' : '')) + (n.read ? ' read' : '')}"
+           th:href="@{/notifications/{id}/open(id=${n.id})}">
+            <span class="dot" th:if="${!n.read}"></span>
+            <div class="top">
+                <div class="msg" th:text="${n.message}">通知メッセージ</div>
+                <div class="time" th:text="${#temporals.format(n.createdAt, 'yyyy/MM/dd HH:mm')}">2026/09/20 19:00</div>
+            </div>
+        </a>
+    </div>
 </div>
 </body>
 </html>

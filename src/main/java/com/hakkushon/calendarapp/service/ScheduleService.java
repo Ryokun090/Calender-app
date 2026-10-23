@@ -1,6 +1,7 @@
 package com.hakkushon.calendarapp.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import com.hakkushon.calendarapp.domain.Schedule;
 import com.hakkushon.calendarapp.dto.CreateScheduleForm;
 import com.hakkushon.calendarapp.dto.EditScheduleForm;
 import com.hakkushon.calendarapp.dto.ScheduleEntry;
+import com.hakkushon.calendarapp.dto.ScheduleTemplate;
 import com.hakkushon.calendarapp.mapper.ScheduleMapper;
 
 @Service
@@ -49,6 +51,14 @@ public class ScheduleService {
                 throw new IllegalStateException("予定の登録に失敗しました");
             }
         }
+    }
+
+    /** 予定追加画面の「過去の予定から選ぶ」候補。メンバーのみ。 */
+    public List<ScheduleTemplate> listTemplates(Long calendarId, Long userId) {
+        if (!calendarAuthService.isMember(userId, calendarId)) {
+            throw new AccessDeniedException("このカレンダーを見る権限がありません");
+        }
+        return scheduleMapper.findRecentTemplates(calendarId, 20);
     }
 
     /** 予定詳細。カレンダーのメンバーでなければ参照不可。 */

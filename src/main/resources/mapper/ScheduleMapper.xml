@@ -56,6 +56,15 @@
         WHERE id = #{id}
     </update>
 
+    <select id="findRecentTemplates" resultType="com.hakkushon.calendarapp.dto.ScheduleTemplate">
+        SELECT title, location, description
+        FROM schedules
+        WHERE calendar_id = #{calendarId}
+        GROUP BY title, location, description
+        ORDER BY MAX(created_at) DESC, MAX(id) DESC
+        LIMIT #{limit}
+    </select>
+
     <delete id="delete">
         DELETE FROM schedules WHERE id = #{id}
     </delete>

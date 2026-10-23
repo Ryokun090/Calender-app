@@ -2,34 +2,42 @@
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>2段階認証 - 共有カレンダーアプリ</title>
+    <title>2段階認証 - SukiMatch</title>
+    <th:block th:replace="~{fragments/base :: css}"></th:block>
+    <style>
+        .code-input { text-align: center; letter-spacing: 6px; font-size: 18px; font-weight: 700; }
+        .code-input::placeholder { letter-spacing: normal; font-size: 12px; font-weight: 400; }
+        .text-btn { background: none; border: none; padding: 0; font: inherit; font-size: 11px; font-weight: 500; color: var(--sm-blue); cursor: pointer; }
+        .text-btn:hover { text-decoration: underline; }
+    </style>
 </head>
-<body>
-<div style="max-width:360px;margin:60px auto;padding:24px;border:1px solid #ddd;border-radius:12px;">
-    <h1 style="text-align:center;font-size:16px;">2段階認証</h1>
-    <p style="text-align:center;font-size:13px;color:#555;">メールアドレスに届いた6桁の認証コードを入力してください</p>
+<body class="sm-auth">
+<div class="sm-auth-wrap" style="padding-top:54px">
+    <h1 class="sm-brand" style="font-size:28px">SukiMatch</h1>
+    <h2 class="sm-auth-title">2段階認証</h2>
+    <p class="sm-brand-sub" style="font-size:12px;margin-top:16px">メールアドレスに届いた6桁の認証コードを入力してください</p>
 
-    <p th:if="${error}" th:text="${error}" style="color:red;font-size:13px;"></p>
-    <p th:if="${resent}" style="color:green;font-size:13px;">認証コードを再送信しました</p>
+    <div class="sm-auth-form" style="margin-top:32px">
+        <p class="sm-alert error" th:if="${error}" th:text="${error}"></p>
+        <p class="sm-alert ok" th:if="${resent}">認証コードを再送信しました</p>
 
-    <form th:action="@{/auth/verify}" method="post">
-        <div>
-            <label>認証コード</label><br/>
-            <input type="text" name="code" inputmode="numeric" maxlength="6" required
-                   style="width:100%;text-align:center;letter-spacing:4px;font-size:18px;">
-        </div>
-        <button type="submit" style="width:100%;margin-top:16px;">認証する</button>
-    </form>
+        <form th:action="@{/auth/verify}" method="post">
+            <div class="sm-field">
+                <label class="sm-label" for="code">認証コード</label>
+                <input class="sm-input code-input" id="code" type="text" name="code" inputmode="numeric" maxlength="6" required autofocus placeholder="6桁の認証コード">
+            </div>
+            <div style="text-align:center;margin-top:24px">
+                <button type="submit" class="sm-btn dark tall" style="min-width:156px">認証する</button>
+            </div>
+        </form>
+    </div>
 
-    <form th:action="@{/auth/verify/resend}" method="post" style="margin-top:12px;">
-        <button type="submit" style="width:100%;background:none;border:none;color:#357;text-decoration:underline;cursor:pointer;">
-            認証コードを再送信
-        </button>
-    </form>
-
-    <p style="text-align:center;margin-top:16px;">
-        <a th:href="@{/auth/login}">ログイン画面へ戻る</a>
-    </p>
+    <div class="sm-auth-links" style="margin-top:24px">
+        <form th:action="@{/auth/verify/resend}" method="post" style="margin:0">
+            <button type="submit" class="text-btn">認証コードを再送信</button>
+        </form>
+        <a class="plain" style="font-size:11px;font-weight:500;color:var(--sm-sub)" th:href="@{/auth/login}">ログイン画面へ戻る</a>
+    </div>
 </div>
 </body>
 </html>

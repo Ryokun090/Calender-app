@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,9 +13,14 @@ import com.hakkushon.calendarapp.domain.Calendar;
 import com.hakkushon.calendarapp.domain.CalendarMember;
 import com.hakkushon.calendarapp.domain.CalendarSummary;
 import com.hakkushon.calendarapp.domain.InviteCode;
+import com.hakkushon.calendarapp.dto.MemberInfo;
+import com.hakkushon.calendarapp.dto.MenuCalendar;
 import com.hakkushon.calendarapp.mapper.CalendarMapper;
 import com.hakkushon.calendarapp.mapper.CalendarMemberMapper;
+import com.hakkushon.calendarapp.mapper.InviteCodeAdminMapper;
 import com.hakkushon.calendarapp.mapper.InviteCodeMapper;
+import com.hakkushon.calendarapp.mapper.MenuCalendarMapper;
+import com.hakkushon.calendarapp.mapper.PollResponseMapper;
 
 @Service
 public class CalendarService {
@@ -27,13 +33,20 @@ public class CalendarService {
     private final CalendarMapper calendarMapper;
     private final CalendarMemberMapper calendarMemberMapper;
     private final InviteCodeMapper inviteCodeMapper;
+    private final InviteCodeAdminMapper inviteCodeAdminMapper;
+    private final PollResponseMapper pollResponseMapper;
+    private final MenuCalendarMapper menuCalendarMapper;
     private final SecureRandom random = new SecureRandom();
 
     public CalendarService(CalendarMapper calendarMapper, CalendarMemberMapper calendarMemberMapper,
-                            InviteCodeMapper inviteCodeMapper) {
+                            InviteCodeMapper inviteCodeMapper, InviteCodeAdminMapper inviteCodeAdminMapper,
+                            PollResponseMapper pollResponseMapper, MenuCalendarMapper menuCalendarMapper) {
         this.calendarMapper = calendarMapper;
         this.calendarMemberMapper = calendarMemberMapper;
         this.inviteCodeMapper = inviteCodeMapper;
+        this.inviteCodeAdminMapper = inviteCodeAdminMapper;
+        this.pollResponseMapper = pollResponseMapper;
+        this.menuCalendarMapper = menuCalendarMapper;
     }
 
     /**
@@ -54,6 +67,14 @@ public class CalendarService {
         return calendarMapper.findCalendarsForUser(userId);
     }
 
+    /**
+     * ログイン直後などに最初に開くカレンダー(個人用が先頭)。参加しているカレンダーが無ければnull。
+     */
+    public Long findLandingCalendarId(Long userId) {
+        List<MenuCalendar> calendars = menuCalendarMapper.findByUserId(userId);
+        return calendars.isEmpty() ? null : calendars.get(0).getId();
+    }
+
     public Calendar getCalendar(Long calendarId) {
         return calendarMapper.findById(calendarId)
                 .orElseThrow(() -> new IllegalArgumentException("カレンダーが見つかりません"));
@@ -61,6 +82,35 @@ public class CalendarService {
 
     public int countMembers(Long calendarId) {
         return calendarMemberMapper.countAcceptedMembers(calendarId);
+    }
+
+    /** メンバー一覧。カレンダーのメンバーのみ参照できる。 */
+    public List<MemberInfo> listMembers(Long calendarId, Long requesterId) {
+        if (!calendarMemberMapper.isMember(calendarId, requesterId)) {
+            throw new AccessDeniedException("このカレンダーのメンバーではありません");
+        }
+        return calendarMemberMapper.findMembersWithUser(calendarId);
+    }
+
+    /**
+     * メンバーを追放する。オーナーのみ実行でき、自分自身とオーナーは外せない。
+     * 外したメンバーが空き日程調整に出していた○×回答は、集計に残らないように消す。
+     * (そのメンバーが作った予定・コメントは残る)
+     */
+    @Transactional
+    public void removeMember(Long calendarId, Long operatorId, Long targetUserId) {
+        if (!calendarMemberMapper.isOwner(calendarId, operatorId)) {
+            throw new AccessDeniedException("メンバーを外せるのはオーナーのみです");
+        }
+        if (operatorId.equals(targetUserId)) {
+            throw new IllegalArgumentException("自分自身は外せません");
+        }
+        int deleted = calendarMemberMapper.deleteMember(calendarId, targetUserId);
+        if (deleted == 0) {
+            // メンバーでない、またはオーナー(deleteMemberはrole='member'だけを消す)
+            throw new IllegalArgumentException("このユーザーは外せません");
+        }
+        pollResponseMapper.deleteByUserInCalendar(calendarId, targetUserId);
     }
 
     /**
@@ -80,8 +130,13 @@ public class CalendarService {
         return calendar.getId();
     }
 
+    /**
+     * 招待コードを新しく発行する。そのカレンダーで有効だった古いコードは、先に期限切れにして使えなくする。
+     */
     @Transactional
     public String issueInviteCode(Long calendarId, Long userId) {
+        inviteCodeAdminMapper.expireAllByCalendar(calendarId);
+
         String code = generateCode();
         InviteCode invite = new InviteCode();
         invite.setCalendarId(calendarId);
@@ -90,6 +145,11 @@ public class CalendarService {
         invite.setExpiresAt(LocalDateTime.now().plusDays(INVITE_EXPIRY_DAYS));
         inviteCodeMapper.insert(invite);
         return code;
+    }
+
+    /** 今そのカレンダーで有効な招待コード。無ければnull。 */
+    public String findActiveInviteCode(Long calendarId) {
+        return inviteCodeAdminMapper.findActiveCode(calendarId);
     }
 
     public enum JoinResult {
